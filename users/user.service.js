@@ -2,73 +2,180 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const db = require('_helpers/db');
+var springedge = require('springedge');
 const User = db.User;
 
 module.exports = {
-    authenticate,
-    getAll,
-    getById,
-    create,
-    update,
-    delete: _delete
+    requestOTP,
+    resendOTP,
+    validateOTP,
+    login,
+    saveInfo
 };
 
-async function authenticate({ id, password }) {
+async function sendOTP(userParam){
+
+    var generatedOTP = Math.floor(100000 + Math.random() * 900000);
+    const user = await User.findOne({ id:userParam.id });
+    userParam.otp = generatedOTP;
+
+    //copy userParam properties to user
+    Object.assign(user, userParam);
+    await user.save();
+
+    //demo test credentials from springedge
+    var params = {
+        'apikey': '6mj40q3t7o89qz93cn0aytz8itxg6641', // API Key
+        'sender': 'SEDEMO', // Sender Name
+        'to': [
+            userParam.mobile //Moblie Number
+        ],
+        'message': 'Hi, this is a test message from spring edge',
+        'format': 'json'
+        };
+        
+        springedge.messages.send(params, 5000, function (err, response) {
+            
+            if (err) {
+                console.log("error while sending verification code",err);
+                // throw 'error while sending verification code "' + err + '"';
+                return {
+                    status : "error while sending verification code , " + err.error
+                }
+            }else{
+                console.log("successfully sent the verification code",response);
+                return {
+                    status : "successfully sent the verification code"
+                }
+            }
+        });
+}
+
+async function requestOTP(userParam) {
+    // validate
+    // if (await User.findOne({ id: userParam.id })) {
+    //     throw 'Device id "' + userParam.id + '" is already present';
+    // }
+
+    // save user
+    const user = new User(userParam);
+    await user.save();
+
+    //sendOTP
+    return sendOTP(userParam);
+
+}
+
+async function resendOTP(userParam) {
+    // validate
+    if (await User.find({ id: userParam.id })) {
+        if (await User.find({ mobile: userParam.mobile })) {
+            return sendOTP(userParam);
+        }else{
+            throw 'user with given mobile and id pair not found , "' 
+                    + userParam.mobile + '", "' + userParam.id +'"';
+        }
+    }else{
+        throw 'user with given id "' + userParam.id + '" not found';
+    }
+
+}
+
+async function validateOTP({otp,id}) {
+
     const user = await User.findOne({ id });
+    // validate
+    if (user) {
+        if (otp === user.otp){
+            return {
+                status : "match"
+            }
+        }else{
+            return {
+                status : "mismatch"
+            }
+        }
+    }else{
+        throw 'user with given id "' + userParam.id + '" not found';
+    }
+
+}
+
+async function login({ id, password, mobile }) {
+    const user = await User.findOne({ id , password , mobile});
     if (user && bcrypt.compareSync(password, user.hash)) {
         const token = jwt.sign({ sub: user.id }, config.secret, { expiresIn: '7d' });
         return {
-            ...user.toJSON(),
-            token
+            // ...user.toJSON(),
+            token,
+            status : "success",
+            message : "successfully found the user"
         };
+    }else{
+        return {
+            status : "success",
+            message : "user not found"
+        }
+
     }
 }
 
-async function getAll() {
-    return await User.find();
-}
-
-async function getById(id) {
-    return await User.findById(id);
-}
-
-async function create(userParam) {
+async function saveInfo({id , password}){
     // validate
-    if (await User.findOne({ id: userParam.id })) {
-        throw 'id "' + userParam.id + '" is already taken';
-    }
-
-    const user = new User(userParam);
-
-    // hash password
-    if (userParam.password) {
-        user.hash = bcrypt.hashSync(userParam.password, 10);
-    }
-
-    // save user
-    await user.save();
+    await User.findOne({id}, function(err, user) {
+          // do your updates here
+        user.password = password;
+        await user.save();
+        if (user && bcrypt.compareSync(password, user.hash)) {
+            const token = jwt.sign({ sub: user.id }, config.secret, { expiresIn: '7d' });
+            return {
+                // ...user.toJSON(),
+                token,
+                status : "success",
+                message : "password created successfully"
+            };
+        }else{
+            return {
+                status : "user not found"
+            }
+        }
+      })
 }
 
-async function update(id, userParam) {
-    const user = await User.findById(id);
+// async function getAll() {
+//     return await User.find();
+// }
 
-    // validate
-    if (!user) throw 'User not found';
-    if (user.username !== userParam.username && await User.findOne({ username: userParam.username })) {
-        throw 'Username "' + userParam.username + '" is already taken';
-    }
+// async function getById(id) {
+//     return await User.findById(id);
+// }
 
-    // hash password if it was entered
-    if (userParam.password) {
-        userParam.hash = bcrypt.hashSync(userParam.password, 10);
-    }
+// async function update(id, userParam) {
+//     const user = await User.findById(id);
 
-    // copy userParam properties to user
-    Object.assign(user, userParam);
+//     // validate
+//     if (!user) throw 'User not found';
+//     if (user.id !== userParam.id && await User.findOne({ id: userParam.id })) {
+//         throw 'Username "' + userParam.id + '" is already taken';
+//     }
 
-    await user.save();
-}
+//     // hash password if it was entered
+//     if (userParam.password) {
+//         userParam.hash = bcrypt.hashSync(userParam.password, 10);
+//     }
 
-async function _delete(id) {
-    await User.findByIdAndRemove(id);
-}
+//     // copy userParam properties to user
+//     Object.assign(user, userParam);
+
+//     await user.save();
+// }
+
+// async function _delete(id) {
+//     await User.findByIdAndRemove(id);
+// }
+
+
+// hash password
+// if (userParam.password) {
+//     user.hash = bcrypt.hashSync(userParam.password, 10);
+// }

@@ -3,8 +3,10 @@ const Schema = mongoose.Schema;
 
 const schema = new Schema({
     id: { type: String, unique: true, required: true },
-    hash: { type: String, required: true },
-    enrollment: { type: String, required: true },
+    mobile: { type: String },
+    hash: { type: String},
+    enrollment: { type: String },
+    otp: { type: String },
     createdDate: { type: Date, default: Date.now }
 });
 
