@@ -13,14 +13,12 @@ module.exports = {
     saveInfo
 };
 
-async function sendOTP(userParam){
+async function sendOTP(user){
 
     var generatedOTP = Math.floor(100000 + Math.random() * 900000);
-    const user = await User.findOne({ id:userParam.id });
-    userParam.otp = generatedOTP;
+    user.otp = generatedOTP;
 
     //copy userParam properties to user
-    Object.assign(user, userParam);
     await user.save();
 
     //demo test credentials from springedge
@@ -28,7 +26,7 @@ async function sendOTP(userParam){
         'apikey': '6mj40q3t7o89qz93cn0aytz8itxg6641', // API Key
         'sender': 'SEDEMO', // Sender Name
         'to': [
-            userParam.mobile //Moblie Number
+            user.mobile //Moblie Number
         ],
         'message': 'Hi, this is a test message from spring edge',
         'format': 'json'
@@ -59,27 +57,27 @@ async function requestOTP(userParam) {
 
     // save user
     const user = new User(userParam);
-    await user.save();
 
     //sendOTP
-    return sendOTP(userParam);
+    return sendOTP(user);
 
 }
 
 async function resendOTP(userParam) {
     // validate
-    if (await User.find({ id: userParam.id })) {
-        if (await User.find({ mobile: userParam.mobile })) {
-            return sendOTP(userParam);
-        }else{
-            throw 'user with given mobile and id pair not found , "' 
-                    + userParam.mobile + '", "' + userParam.id +'"';
-        }
+    const user  =  await User.find({ id: userParam.id , mobile: userParam.mobile });
+    
+    if (user) {
+        return sendOTP(user);
     }else{
-        throw 'user with given id "' + userParam.id + '" not found';
+        throw 'user with given mobile and deviceId pair not found , "' 
+                + userParam.mobile + '", "' + userParam.id +'"';
     }
+    
 
 }
+
+
 
 async function validateOTP({otp,id}) {
 
@@ -102,7 +100,8 @@ async function validateOTP({otp,id}) {
 }
 
 async function login({ id, password, mobile }) {
-    const user = await User.findOne({ id , password , mobile});
+    
+    const user = await User.findOne({ id , mobile});
     if (user && bcrypt.compareSync(password, user.hash)) {
         const token = jwt.sign({ sub: user.id }, config.secret, { expiresIn: '7d' });
         return {
@@ -122,24 +121,48 @@ async function login({ id, password, mobile }) {
 
 async function saveInfo({id , password}){
     // validate
-    await User.findOne({id}, function(err, user) {
-          // do your updates here
-        user.password = password;
+
+    const user = await User.findOne({id});
+    if(user){
+        var hash = bcrypt.hashSync(password, 10);
+        Object.assign(user,{hash:hash});
         await user.save();
-        if (user && bcrypt.compareSync(password, user.hash)) {
-            const token = jwt.sign({ sub: user.id }, config.secret, { expiresIn: '7d' });
-            return {
-                // ...user.toJSON(),
-                token,
-                status : "success",
-                message : "password created successfully"
-            };
-        }else{
-            return {
-                status : "user not found"
-            }
+    }else{
+        return {
+            status : "user not found"
         }
-      })
+    }
+    if (user && bcrypt.compareSync(password, user.hash)) {
+        const token = jwt.sign({ sub: user.id }, config.secret, { expiresIn: '7d' });
+        return {
+            // ...user.toJSON(),
+            token,
+            status : "success",
+            message : "password created successfully"
+        };
+    }else{
+        return {
+            status : "user not found"
+        }
+    }
+    // await User.findOne({id}, function(err, user) {
+    //       // do your updates here
+    //     user.password = password;
+    //     await user.save();
+    //     if (user && bcrypt.compareSync(password, user.hash)) {
+    //         const token = jwt.sign({ sub: user.id }, config.secret, { expiresIn: '7d' });
+    //         return {
+    //             // ...user.toJSON(),
+    //             token,
+    //             status : "success",
+    //             message : "password created successfully"
+    //         };
+    //     }else{
+    //         return {
+    //             status : "user not found"
+    //         }
+    //     }
+    //   })
 }
 
 // async function getAll() {

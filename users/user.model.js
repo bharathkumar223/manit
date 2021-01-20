@@ -7,6 +7,7 @@ const schema = new Schema({
     hash: { type: String},
     enrollment: { type: String },
     otp: { type: String },
+    name: { type: String },
     createdDate: { type: Date, default: Date.now }
 });
 

@@ -30,7 +30,7 @@ function requestOTP(req, res, next) {
 }
 
 function resendOTP(req, res, next) {
-    userService.resendCode(req.body)
+    userService.resendOTP(req.body)
         .then(response => res.json(response))
         .catch(err => next(err));
 }
