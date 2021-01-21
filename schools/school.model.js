@@ -5,12 +5,14 @@ const schema = new Schema({
     id: { type: String, unique: true, required: true },
     name: { type: String, unique: true, required: true },
     schoolType : { type: String},
-    enrollment: { type: String, required: true },
-    grade: { type: String, required: true },
+    address : { type: String},
+    enrollment: { type: String },
+    grade: { type: String },
     department  : { type: String },
     studentId  : { type: String },
-    class  : { type: String },
-    createdDate: { type: Date, default: Date.now }
+    class  : { type: String },isConstant:true,
+    createdDate: { type: Date, default: Date.now },
+    isConstant:{type:Boolean, default:false}
 });
 
 schema.set('toJSON', {
@@ -23,7 +25,4 @@ schema.set('toJSON', {
 });
 
 const School = mongoose.model('School', schema);
-
-const SchoolSchema = schema;
-
-module.exports = {School , SchoolSchema}
+module.exports = School;

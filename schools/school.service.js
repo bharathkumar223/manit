@@ -1,33 +1,60 @@
-const config = require('config.json');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-var springedge = require('springedge');
-const { User , School} = require('../_helpers/db');
+const { School} = require('../_helpers/db');
 
 module.exports = {
     search,
     save,
     matchSameSchool,
-    matchSameUniv
+    matchSameUniv,
+    uploadImage
 };
+
+var schoolSearch = [
+    { name: 'Choongang University', address: 'Dummy address for Choongang University'  },
+    { name: 'Korea University', address: 'Dummy address for Korea University'  },
+    { name: 'Seoul National University', address: 'Dummy address for Seoul National University'  },
+    { name: 'Yonsei University', address: 'Dummy address for Yonsei University'  },
+    { name: 'Sogang University', address: 'Dummy address for Sogang University'  },
+    { name: 'Naksang High School', address: 'Dummy address for Naksang High School'  },
+    { name: 'Bundang High School', address: 'Dummy address for Bundang High School'  },
+    { name: 'Dolma High School', address: 'Dummy address for Dolma High School'  },
+    { name: 'Emae High School', address: 'Dummy address for Emae High School'  },
+    { name: 'Sunae High School', address: 'Dummy address for Sunae High School'  },
+    { name: 'Seohyun Middle School', address: 'Dummy address for Seohyun Middle School'  },
+    { name: 'Cheongsol Middle School', address: 'Dummy address for Cheongsol Middle School'  },
+    { name: 'Yatab Middle School', address: 'Dummy address for Yatab Middle School'  },
+    { name: 'Bulgok Middle School', address: 'Dummy address for Bulgok Middle School'  },
+    { name: 'Beckhyun Middle School', address: 'Dummy address for Beckhyun Middle School'  }
+];
 
 async function search({searchString}){
 
-    School.find(
-        { "name": { "$regex": searchString , "$options": "i" } },
-        function(err,docs) { 
-            if(err){
-                return {
-                    status : err.error
-                }
-            }else{
-                return {
-                    ...docs.toJSON()
-                }
-            }
-        }
+    var condition = new RegExp(searchString);
 
-    );
+    var result = schoolSearch.filter(function (el) {
+    return condition.test(el);
+    });
+
+    console.log(result);
+
+    return {
+        schools:result
+    }
+
+    // School.find(
+    //     { "name": { "$regex": searchString , "$options": "i" } },
+    //     function(err,docs) { 
+    //         if(err){
+    //             return {
+    //                 status : err.error
+    //             }
+    //         }else{
+    //             return {
+    //                 ...docs.toJSON()
+    //             }
+    //         }
+    //     }
+
+    // );
 }
 
 async function save(schoolParam){
@@ -141,6 +168,42 @@ async function matchSameUniv({universityName}){
             });
         }
     });
+}
+
+async function uploadImage({ id }){
+
+    const imgFilePath = __dirname +'/uploads/'+id+'/';
+    var imageData = fs.readFileSync(imgFilePath);
+    
+    // Create an Image instance
+    const image = new Image({
+      type: 'image/png',
+      data: imageData
+    });
+
+    image.save()
+    .then(img => {
+
+      Image.findById(img, (err, findOutImage) => {
+        if (err) throw err;
+        try{
+          fs.writeFileSync( imgFilePath, findOutImage.data);
+          console.log("Stored an image to mongo.");
+        }catch(e){
+          console.log(e);
+        }
+      });
+    }).catch(err => {
+      console.log(err);
+      throw err;
+    });
+
+    //remove file after uploading to mongo
+    fs.unlink(imgFilePath, (err) => {
+        if (err) throw err;
+        console.log(imgFilePath + ' was deleted');
+      });
+    
 }
 
 // async function getAll() {

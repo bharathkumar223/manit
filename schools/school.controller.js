@@ -1,12 +1,35 @@
 const express = require('express');
 const router = express.Router();
 const schoolService = require('./school.service');
+var multer  = require('multer')
+var upload = multer({ dest: __dirname +'uploads/' })
+
+const authenticateJWT = (req, res, next) => {
+    console.log("inside auth jwt");
+    const authHeader = req.headers.authorization;
+
+    if (authHeader) {
+        const token = authHeader.split(' ')[1];
+
+        jwt.verify(token, accessTokenSecret, (err, user) => {
+            if (err) {
+                return res.sendStatus(403);
+            }
+
+            req.user = user;
+            next();
+        });
+    } else {
+        res.sendStatus(401);
+    }
+};
 
 // routes
-router.get('/school/search', authenticateJWT ,search);
+router.get('/search', authenticateJWT ,search);
 router.post('/school/save', authenticateJWT ,save);
 router.get('/getusers/school', authenticateJWT ,matchSameSchool);
 router.post('/getusers/univ', authenticateJWT ,matchSameUniv);
+router.post('/upload', authenticateJWT ,upload.array('file', 12) , uploadImage);
 
 module.exports = router;
 
@@ -33,24 +56,13 @@ function matchSameUniv(req, res, next) {
         .then(response => res.json(response))
         .catch(err => next(err));
 }
-const authenticateJWT = (req, res, next) => {
-    const authHeader = req.headers.authorization;
 
-    if (authHeader) {
-        const token = authHeader.split(' ')[1];
+function uploadImage(req, res, next) {
+    schoolService.uploadImage(req.body)
+        .then(response => res.json(response))
+        .catch(err => next(err));
+}
 
-        jwt.verify(token, accessTokenSecret, (err, user) => {
-            if (err) {
-                return res.sendStatus(403);
-            }
-
-            req.user = user;
-            next();
-        });
-    } else {
-        res.sendStatus(401);
-    }
-};
 
 
 // function getById(req, res, next) {

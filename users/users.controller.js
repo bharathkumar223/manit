@@ -8,6 +8,8 @@ router.post('/signup/otp/request', requestOTP);
 router.post('/signup/otp/resend', resendOTP);
 router.post('/signup/otp/validate', validateOTP);
 router.post('/signup/save', saveInfo);
+router.get('/hobbies/get', getHobbies);
+router.post('/hobbies/save', saveHobbies);
 // router.get('/current', getCurrent);
 // router.get('/:id', getById);
 // router.put('/:id', update);
@@ -43,6 +45,18 @@ function validateOTP(req, res, next) {
 
 function saveInfo(req, res, next) {
     userService.saveInfo(req.body)
+        .then(response => res.json(response))
+        .catch(err => next(err));
+}
+
+function getHobbies(req, res, next) {
+    userService.getHobbies(req.body)
+        .then(response => res.json(response))
+        .catch(err => next(err));
+}
+
+function saveHobbies(req, res, next) {
+    userService.saveHobbies(req.body)
         .then(response => res.json(response))
         .catch(err => next(err));
 }

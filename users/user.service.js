@@ -10,15 +10,16 @@ module.exports = {
     resendOTP,
     validateOTP,
     login,
-    saveInfo
+    saveInfo,
+    getById,
+    getHobbies,
+    saveHobbies
 };
 
 async function sendOTP(user){
 
     var generatedOTP = Math.floor(100000 + Math.random() * 900000);
-    user.otp = generatedOTP;
-
-    //copy userParam properties to user
+    Object.assign(user,{otp:generatedOTP});
     await user.save();
 
     //demo test credentials from springedge
@@ -51,9 +52,9 @@ async function sendOTP(user){
 
 async function requestOTP(userParam) {
     // validate
-    // if (await User.findOne({ id: userParam.id })) {
-    //     throw 'Device id "' + userParam.id + '" is already present';
-    // }
+    if (await User.findOne({ id: userParam.id })) {
+        throw 'Device id "' + userParam.id + '" is already present';
+    }
 
     // save user
     const user = new User(userParam);
@@ -64,8 +65,8 @@ async function requestOTP(userParam) {
 }
 
 async function resendOTP(userParam) {
-    // validate
-    const user  =  await User.find({ id: userParam.id , mobile: userParam.mobile });
+    
+    const user  =  await User.findOne({ id: userParam.id , mobile: userParam.mobile });
     
     if (user) {
         return sendOTP(user);
@@ -73,16 +74,12 @@ async function resendOTP(userParam) {
         throw 'user with given mobile and deviceId pair not found , "' 
                 + userParam.mobile + '", "' + userParam.id +'"';
     }
-    
 
 }
-
-
 
 async function validateOTP({otp,id}) {
 
     const user = await User.findOne({ id });
-    // validate
     if (user) {
         if (otp === user.otp){
             return {
@@ -115,12 +112,10 @@ async function login({ id, password, mobile }) {
             status : "success",
             message : "user not found"
         }
-
     }
 }
 
 async function saveInfo({id , password}){
-    // validate
 
     const user = await User.findOne({id});
     if(user){
@@ -145,33 +140,69 @@ async function saveInfo({id , password}){
             status : "user not found"
         }
     }
-    // await User.findOne({id}, function(err, user) {
-    //       // do your updates here
-    //     user.password = password;
-    //     await user.save();
-    //     if (user && bcrypt.compareSync(password, user.hash)) {
-    //         const token = jwt.sign({ sub: user.id }, config.secret, { expiresIn: '7d' });
-    //         return {
-    //             // ...user.toJSON(),
-    //             token,
-    //             status : "success",
-    //             message : "password created successfully"
-    //         };
-    //     }else{
-    //         return {
-    //             status : "user not found"
-    //         }
-    //     }
-    //   })
+}
+
+var hobbies = [
+    { name: 'Traveler' },
+    { name: 'Painter' },
+    { name: 'Poker Player'  },
+    { name: 'Chess Player' },
+    { name: 'Football Fan'},
+    { name: 'Console Gamer'  },
+    { name: 'Environmentalist'  },
+    { name: 'gourmet' },
+];
+
+async function getHobbies({ id }) {
+
+    const user = await User.findOne({id});
+   
+    if(user){
+        var oldHobbies = user.hobbies;
+        if(oldHobbies.length > 0){
+            var newHobbies = hobbies.filter(n => !oldHobbies.includes(n));
+            return {
+                hobbies:newHobbies
+            }
+        }else{
+            return {
+                hobbies:hobbies
+            }
+        }
+    }else{
+        return {
+            status : "user not found for the provided id : " + id
+        }
+    }
+}
+
+async function saveHobbies({ id , hobbies}) {
+    
+    const user = await User.findOne({id});
+   
+    if(user){
+        var oldHobbies = user.hobbies;
+        if(oldHobbies.length > 0){
+            var newHobbies = oldHobbies.concat(hobbies);
+            Object.assign(user,{hobbies:newHobbies});
+        }else{
+            Object.assign(user,{hobbies:hobbies});
+        }
+        await user.save();
+    }else{
+        return {
+            status : "user not found for the provided id : " + id
+        }
+    }
 }
 
 // async function getAll() {
 //     return await User.find();
 // }
 
-// async function getById(id) {
-//     return await User.findById(id);
-// }
+async function getById(id) {
+    return await User.findById(id);
+}
 
 // async function update(id, userParam) {
 //     const user = await User.findById(id);
