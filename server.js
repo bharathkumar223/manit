@@ -11,12 +11,13 @@ app.use(bodyParser.json());
 app.use(cors());
 
 // use JWT auth to secure the api
-app.use(jwt());
+// app.use(jwt());
 
 // api routes
 
-app.use('/api/school', require('./schools/school.controller'));
+// app.use('/api/school', require('./schools/school.controller'));
 app.use('/api', require('./users/users.controller'));
+app.use('/school', require('./school/school.controller'));
 
 // global error handler
 app.use(errorHandler);

@@ -24,5 +24,5 @@ schema.set('toJSON', {
     }
 });
 
-const School = mongoose.model('School', schema);
-module.exports = School;
+module.exports = mongoose.model('School', schema);
+

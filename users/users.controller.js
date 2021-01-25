@@ -1,6 +1,29 @@
 ﻿const express = require('express');
 const router = express.Router();
 const userService = require('./user.service');
+const config = require('./../config.json');
+const jwt = require('jsonwebtoken');
+
+const authenticateJWT = (req, res, next) => {
+    console.log("inside auth jwt");
+    const authHeader = req.headers.authorization;
+
+    if (authHeader) {
+        const token = authHeader.split(' ')[1];
+
+        jwt.verify(token, config.secret, (err, user) => {
+            if (err) {
+                return res.sendStatus(403);
+            }
+
+            // req.user = user;
+            console.log("user => ",user);
+            next();
+        });
+    } else {
+        res.sendStatus(401);
+    }
+};
 
 // routes
 router.post('/login', login);
@@ -8,6 +31,8 @@ router.post('/signup/otp/request', requestOTP);
 router.post('/signup/otp/resend', resendOTP);
 router.post('/signup/otp/validate', validateOTP);
 router.post('/signup/save', saveInfo);
+router.post('/signup/save/personalInfo',  authenticateJWT,savePersonalInfo);
+router.get('/signup/id/validation', isIdAvailable);
 router.get('/hobbies/get', getHobbies);
 router.post('/hobbies/save', saveHobbies);
 // router.get('/current', getCurrent);
@@ -57,6 +82,18 @@ function getHobbies(req, res, next) {
 
 function saveHobbies(req, res, next) {
     userService.saveHobbies(req.body)
+        .then(response => res.json(response))
+        .catch(err => next(err));
+}
+
+function isIdAvailable(req, res, next) {
+    userService.isIdAvailable(req.body)
+        .then(response => res.json(response))
+        .catch(err => next(err));
+}
+
+function savePersonalInfo(req, res, next) {
+    userService.savePersonalInfo(req.body)
         .then(response => res.json(response))
         .catch(err => next(err));
 }

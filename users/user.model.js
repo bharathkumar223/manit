@@ -8,6 +8,8 @@ const schema = new Schema({
     enrollment: { type: String },
     otp: { type: String },
     name: { type: String },
+    gender:{type:String},
+    birthDate:{type:String},
     hobbies : [{type: String}],
     createdDate: { type: Date, default: Date.now }
 });

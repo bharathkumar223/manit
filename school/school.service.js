@@ -1,5 +1,6 @@
 const { School} = require('../_helpers/db');
-
+const db = require('../_helpers/db');
+const SchoolList = db.SchoolList
 module.exports = {
     search,
     save,
@@ -28,18 +29,31 @@ var schoolSearch = [
 
 async function search({searchString}){
 
-    var condition = new RegExp(searchString);
-
-    var result = schoolSearch.filter(function (el) {
-    return condition.test(el);
+    return SchoolList.find({name:{$regex:searchString,$options:'i'}}, function (err, docs) {
+        
+        if(err){
+            return {
+                status:'fail',
+                message:err
+            }
+        }else{
+            return {
+                schools:docs
+            }
+        }
     });
-
-    console.log(result);
-
-    return {
-        schools:result
-    }
-
+    // if(school){
+    //     for(let school in schools){
+            
+    //     }
+    //     return {
+    //         schools:school
+    //     }
+    // }else{
+    //     return {
+    //         schools:'err'
+    //     }
+    // }
     // School.find(
     //     { "name": { "$regex": searchString , "$options": "i" } },
     //     function(err,docs) { 

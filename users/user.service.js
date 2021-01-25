@@ -1,7 +1,7 @@
 ﻿const config = require('config.json');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const db = require('_helpers/db');
+const db = require('../_helpers/db');
 var springedge = require('springedge');
 const User = db.User;
 
@@ -13,7 +13,9 @@ module.exports = {
     saveInfo,
     getById,
     getHobbies,
-    saveHobbies
+    saveHobbies,
+    isIdAvailable,
+    savePersonalInfo
 };
 
 async function sendOTP(user){
@@ -196,12 +198,51 @@ async function saveHobbies({ id , hobbies}) {
     }
 }
 
+async function isIdAvailable({id}){
+    const user = await User.findOne({id});
+
+    if(user){
+        return {
+            status:"fail",
+            message:"Id already taken, please choose another id"
+        }
+    }
+    else{
+        return {
+            status:"success",
+            message:"Id is available"
+        }
+    }
+}
+
+async function savePersonalInfo({id,name,gender,birthDate}){
+
+    const user = await User.findOne({id});
+
+    if(user){
+        Object.assign(user,{name:name,gender:gender,birthDate:birthDate});
+        await user.save();
+        return {
+            status:"success",
+            message:"personal info saved success"
+        }
+    }
+    else{
+        return {
+            status:"fail",
+            message:"user with the id " + id + " doest not exist"
+        }
+    }
+
+}
+
 // async function getAll() {
 //     return await User.find();
 // }
 
 async function getById(id) {
-    return await User.findById(id);
+    const user = await User.findById(id);
+    console.log("getById => ", id , user);
 }
 
 // async function update(id, userParam) {
