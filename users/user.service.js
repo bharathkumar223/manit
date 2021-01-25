@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const db = require('../_helpers/db');
 var springedge = require('springedge');
 const User = db.User;
+const UserVerification = db.UserVerification
 
 module.exports = {
     requestOTP,
@@ -15,8 +16,97 @@ module.exports = {
     getHobbies,
     saveHobbies,
     isIdAvailable,
-    savePersonalInfo
+    savePersonalInfo,
+    requestVerification,
+    getVerificationRequest,
+    respondVerificationRequest
 };
+
+async function respondVerificationRequest({id, requestById, school, status}){
+    const userVerification = await UserVerification.findOne({
+        requestBy:requestById,
+        requestTo:requestToId,
+        school:school
+    })
+    //add code to make sure the status sent from user is either of the approve/decline/pass
+    if(userVerification){
+        Object.assign(userVerification,{status:status});
+        await userVerification.save(function(err, user) {
+            if (err) {
+                console.log(err);
+                return {
+                    status:"fail",
+                    message:"Error while updating the status , Error : " + err
+                }
+            }
+            return {
+                status:"success",
+                message:"status updated"
+            }
+        });
+    }else{
+        return {
+            status:"fail",
+            message:"There is no request with the given combination"
+        }
+    }
+}
+
+async function requestVerification({requestById, requestToId, school}){
+    const userVerification = await UserVerification.findOne({
+        requestBy:requestById,
+        requestTo:requestToId,
+        school:school
+    })
+    if(userVerification){
+        return{
+            status:"fail",
+            message:"Request is already placed and the status is : " + userVerification.status
+        }
+    }
+    userVerification = new UserVerification({
+        requestBy:requestById,
+        requestTo:requestToId,
+        school:school
+    });
+    await userVerification.save(function(err, user) {
+        if (err) {
+            console.log(err);
+            return {
+                status:"fail",
+                message:"Error while placing the request , Error : " + err
+            }
+        }
+        return {
+            status:"success",
+            message:"Request placed successfully"
+        }
+    });
+
+}
+
+async function getVerificationRequest({id}){
+    
+    const user = await User.findOne({id});
+    if(!user){
+        return {
+            status:"fail",
+            message:"Unable to find user with the given id : " + id
+        }
+    }
+    return UserVerification.find({requestToId:id},function(err,docs){
+        if(err){
+            return {
+                status:'fail',
+                message:err
+            }
+        }else{
+            return {
+                users:docs
+            }
+        }
+    })
+}
 
 async function sendOTP(user){
 

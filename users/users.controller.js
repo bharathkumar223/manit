@@ -35,6 +35,9 @@ router.post('/signup/save/personalInfo',  authenticateJWT,savePersonalInfo);
 router.get('/signup/id/validation', isIdAvailable);
 router.get('/hobbies/get', getHobbies);
 router.post('/hobbies/save', saveHobbies);
+router.post('/request/verification', authenticateJWT,requestVerification);
+router.post('/get/verification/request',authenticateJWT, getVerificationRequest);
+router.post('/respond/verification/request',authenticateJWT, respondVerificationRequest);
 // router.get('/current', getCurrent);
 // router.get('/:id', getById);
 // router.put('/:id', update);
@@ -94,6 +97,24 @@ function isIdAvailable(req, res, next) {
 
 function savePersonalInfo(req, res, next) {
     userService.savePersonalInfo(req.body)
+        .then(response => res.json(response))
+        .catch(err => next(err));
+}
+
+function requestVerification(req, res, next) {
+    userService.requestVerification(req.body)
+        .then(response => res.json(response))
+        .catch(err => next(err));
+}
+
+function getVerificationRequest(req, res, next) {
+    userService.getVerificationRequest(req.body)
+        .then(response => res.json(response))
+        .catch(err => next(err));
+}
+
+function respondVerificationRequest(req, res, next) {
+    userService.respondVerificationRequest(req.body)
         .then(response => res.json(response))
         .catch(err => next(err));
 }
