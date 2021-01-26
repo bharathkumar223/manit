@@ -35,21 +35,37 @@ function returnResponse(status,message){
     }
 }
 
-async function search({searchString}){
+async function search(res,{id,searchString}){
 
-    return SchoolList.find({name:{$regex:searchString,$options:'i'}}, function (err, docs) {
-        
-        if(err){
-            return {
-                status:'fail',
-                message:err
+    const user = await User.findOne({ id });
+    if (user) {
+        const isUniversityChosen = user.universityId?true:false;
+        const isHighSchoolChosen = user.highSchoolId?true:false;
+        const isMidSchoolChosen = user.midSchoolId?true:false;
+         SchoolList.find({name:{$regex:searchString,$options:'i'}}, function (err, docs) {
+            console.log("docs => ",docs);
+            if(err){
+                return {
+                    status:'fail',
+                    message:err
+                }
+            }else{
+                res.status(200).json({
+                    isSchoolChosen:{
+                        isUniversityChosen:isUniversityChosen,
+                        isHighSchoolChosen:isHighSchoolChosen,
+                        isMidSchoolChosen:isMidSchoolChosen
+                    },
+                    schools:docs
+                })
             }
-        }else{
-            return {
-                "schools":docs
-            }
+        });
+    }else{
+        return {
+            status : "fail",
+            message : "user not found for the given id : " + id
         }
-    });
+    }
     // if(school){
     //     for(let school in schools){
             
@@ -80,7 +96,7 @@ async function search({searchString}){
 }
 
 async function save(schoolParam){
-
+    console.log("schoolparam=>",schoolParam);
     if(schoolParam.schoolType === 'high'){
         return savehighSchoolInfo(schoolParam);
     }else if (schoolParam.schoolType === 'mid'){
@@ -95,86 +111,140 @@ async function save(schoolParam){
     }
 }
 
-async function savehighSchoolInfo(schoolParam){
-
-    const user = await User.findOne({ id : schoolParam.id });
+async function savehighSchoolInfo({id, schoolName,enrollment, yearOfEntrance , schoolType}){
+    const user = await User.findOne({ id });
     if (user) {
         if(user.highSchoolId){
-            returnResponse("fail","High School Info has already been saved for the user , with verification status :  " + user.highSchoolVerificationStatus);
+            return { 
+                status:"fail",
+                message:"High School Info has already been saved for the user , with verification status :  " + user.highSchoolVerificationStatus
+            }
         }else{
-            const school = new School(schoolParam);
+            const school = new School({
+                userId:id,
+                name:schoolName,
+                schoolType:schoolType,
+                enrollment:enrollment,
+                yearOfEntrance:yearOfEntrance,
+            });
             if (school) {
+                await school.save();
                 Object.assign(user,{highSchoolId:school._id,highSchoolVerificationStatus:"Pending"});
                 await user.save();
-                await school.save();
-                returnResponse("success","successfully saved the school Info");
+                return{
+                    status:"success",
+                    message:"successfully saved the school Info"
+                }
             }else{
-                returnResponse("fail","unable to save school info, please try again");
+                return{
+                    status:"fail",
+                    message:"unable to save school info, please try again"
+                }
             }
         }
     }else{
-        returnResponse("fail,","user not found for the given id : " + id);
+        return{
+            status:"fail",
+            message:"user not found for the given id : " + id
+        }
     }
 }
 
-async function savemidSchoolInfo(schoolParam){
+async function savemidSchoolInfo({id, schoolName,enrollment, yearOfEntrance , schoolType}){
 
-    const user = await User.findOne({ id : schoolParam.id });
+    const user = await User.findOne({ id });
     if (user) {
         if(user.midSchoolId){
-            returnResponse("fail","Mid School Info has already been saved for the user , with verification status :  " + user.midSchoolVerificationStatus);
+            return { 
+                status:"fail",
+                message:"Mid School Info has already been saved for the user , with verification status :  " + user.midSchoolVerificationStatus
+            }
         }else{
-            const school = new School(schoolParam);
+            const school = new School({
+                userId:id,
+                name:schoolName,
+                schoolType:schoolType,
+                enrollment:enrollment,
+                yearOfEntrance:yearOfEntrance,
+            });
             if (school) {
+                await school.save();
                 Object.assign(user,{midSchoolId:school._id,midSchoolVerificationStatus:"Pending"});
                 await user.save();
-                await school.save();
-                returnResponse("success","successfully saved the school Info");
+                return{
+                    status:"success",
+                    message:"successfully saved the school Info"
+                }
             }else{
-                returnResponse("fail","unable to save school info, please try again");
+                return{
+                    status:"fail",
+                    message:"unable to save school info, please try again"
+                }
             }
         }
     }else{
-        returnResponse("fail,","user not found for the given id : " + id);
+        return{
+            status:"fail",
+            message:"user not found for the given id : " + id
+        }
     }
 }
 
-async function saveUnivInfo(schoolParam){
+async function saveUnivInfo({id, schoolName,enrollment, yearOfEntrance, department , schoolType}){
 
-    const user = await User.findOne({ id : schoolParam.id });
+    const user = await User.findOne({ id });
     if (user) {
         if(user.universityId){
-            returnResponse("fail","University Info has already been saved for the user , with verification status :  " + user.universityVerificationStatus);
+            return { 
+                status:"fail",
+                message:"University Info has already been saved for the user , with verification status :  " + user.universityVerificationStatus
+            }
         }else{
-            const school = new School(schoolParam);
+            const school = new School({
+                userId:id,
+                name:schoolName,
+                schoolType:schoolType,
+                enrollment:enrollment,
+                yearOfEntrance:yearOfEntrance,
+                department:department
+            });
             if (school) {
+                await school.save();
                 Object.assign(user,{universityId:school._id,universityVerificationStatus:"Pending"});
                 await user.save();
-                await school.save();
-                returnResponse("success","successfully saved the school Info");
+                return { 
+                    status:"success",
+                    message:"successfully saved the school Info"
+                }
             }else{
-                returnResponse("fail","unable to save school info, please try again");
+                return { 
+                    status:"fail",
+                    message:"unable to save school info, please try again"
+                }
             }
         }
     }else{
-        returnResponse("fail,","user not found for the given id : " + id);
+        return {
+            status:"fail",
+            message:"user not found for the given id : " + id
+        }
     }
 }
 
-async function saveUnivInfo(univParam){
+// async function saveUnivInfo(univParam){
     
-    const univ = await School.findOne({ id });
-    if (univ) {
-        Object.assign(univ,univParam);
-        await univ.save();
-    }else{
-        const newUniv = new School(univParam);
-        await newUniv.save();
-    }
-    return {
-        status : "successfully saved the university Info"
-    }
-}
+//     const univ = await School.findOne({ id });
+//     if (univ) {
+//         Object.assign(univ,univParam);
+//         await univ.save();
+//     }else{
+//         const newUniv = new School(univParam);
+//         await newUniv.save();
+//     }
+//     return {
+//         status : "successfully saved the university Info"
+//     }
+// }
 
 async function matchSameSchool({schoolName}){
 
@@ -211,34 +281,36 @@ async function matchSameSchool({schoolName}){
     });
 }
 
-async function matchSameUniv({universityName}){
+async function matchSameUniv(res,{universityName}){
 
-    School.find({name: universityName}, function(err, docs) {
-
+    var result;
+     School.find({name: universityName , schoolType:"university"}, function(err, docs) {
+        console.log("school=>",docs);
         if(err){
             return {
-                status : err.error
+                status : "fail",
+                message:err.error
             }
         }else{
             // Map the docs into an array of just the ids of the user
-            var ids = docs.map(function(doc) { return doc.id; });
+            var ids = docs.map(function(doc) { return doc.userId; });
         
             // Get the users whose ids are in the set
-            User.find({id: {$in: ids}}, function(err, docs) {
-                
+            return User.find({id: {$in: ids}}, function(err, docs) {
+                console.log("users=>",docs);
                 if(err){
                     return {
                         status : err.error
                     }
                 }else{
-                    return {
-                        users : docs.map(function(doc){
+                    res.status(200).json({
+                        users:docs.map(function(doc){
                             return {
                                 id:doc.id,
                                 name:doc.name
-                            }
+                            };
                         })
-                    }
+                    })
                 }
 
             });

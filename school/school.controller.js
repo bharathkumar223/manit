@@ -30,14 +30,14 @@ const authenticateJWT = (req, res, next) => {
 router.get('/search', authenticateJWT ,search);
 router.post('/save', authenticateJWT ,save);
 router.get('/getusers/school', authenticateJWT ,matchSameSchool);
-router.post('/getusers/univ', authenticateJWT ,matchSameUniv);
+router.get('/getusers/univ', authenticateJWT ,matchSameUniv);
 router.post('/upload', authenticateJWT ,upload.array('file', 12) , uploadImage);
 
 module.exports = router;
 
 function search(req, res, next) {
-    schoolService.search(req.body)
-        .then(response => res.json(response))
+    schoolService.search(res,req.body)
+        .then(response => response)
         .catch(err => next(err));
 }
 
@@ -54,8 +54,8 @@ function matchSameSchool(req, res, next) {
 }
 
 function matchSameUniv(req, res, next) {
-    schoolService.matchSameUniv(req.body)
-        .then(response => res.json(response))
+    schoolService.matchSameUniv(res,req.body)
+        .then(response => response)
         .catch(err => next(err));
 }
 

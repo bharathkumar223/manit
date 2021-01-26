@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const schema = new Schema({
-    id: { type: String, },
+    userId: { type: String },
     name: { type: String, required: true },
     schoolType : { type: String},
     enrollment: { type: String },
@@ -16,7 +16,6 @@ schema.set('toJSON', {
     versionKey: false,
     transform: function (doc, ret) {
         delete ret._id;
-        delete ret.hash;
     }
 });
 
