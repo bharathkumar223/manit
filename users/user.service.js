@@ -108,7 +108,7 @@ async function getVerificationRequest({id}){
     })
 }
 
-async function sendOTP(user){
+async function sendOTP(res,user){
 
     var generatedOTP = Math.floor(100000 + Math.random() * 900000);
     Object.assign(user,{otp:generatedOTP});
@@ -126,23 +126,31 @@ async function sendOTP(user){
         };
         
         springedge.messages.send(params, 5000, function (err, response) {
-            
-            if (err) {
-                console.log("error while sending verification code",err);
-                // throw 'error while sending verification code "' + err + '"';
-                return {
-                    status : "error while sending verification code , " + err.error
-                }
+        
+            if (response.status) {
+                console.log("response=> ",response);
+                res.status(200).json({
+                    status:"success",
+                    message:"successfully sent the OTP",
+                    OtpDetails:response
+                });
             }else{
-                console.log("successfully sent the verification code",response);
-                return {
-                    status : "successfully sent the verification code"
-                }
+                console.log("error => ",response.error);
+                res.status(200).json({
+                    status:"fail",
+                    message:"Unable to send OTP",
+                    OtpDetails:response
+                });
             }
-        });
+        })
+        
 }
 
-async function requestOTP(userParam) {
+
+
+
+
+async function requestOTP(res,userParam) {
     // validate
     if (await User.findOne({ id: userParam.id })) {
         throw 'Device id "' + userParam.id + '" is already present';
@@ -152,19 +160,21 @@ async function requestOTP(userParam) {
     const user = new User(userParam);
 
     //sendOTP
-    return sendOTP(user);
+    return sendOTP(res,user);
 
 }
 
-async function resendOTP(userParam) {
+async function resendOTP(res,userParam) {
     
-    const user  =  await User.findOne({ id: userParam.id , mobile: userParam.mobile });
+    const user  =  await User.findOne({ id: userParam.id});
     
     if (user) {
-        return sendOTP(user);
+        return sendOTP(res,user);
     }else{
-        throw 'user with given mobile and deviceId pair not found , "' 
-                + userParam.mobile + '", "' + userParam.id +'"';
+        res.status(200).json({
+            status:"fail",
+            messsage:"user with given id not found , id : " + userParam.id
+        });
     }
 
 }
@@ -174,35 +184,38 @@ async function validateOTP({otp,id}) {
     const user = await User.findOne({ id });
     if (user) {
         if (otp === user.otp){
+            const token = jwt.sign({ sub: user.id }, config.secret, { expiresIn: '7d' });
             return {
-                status : "match"
+                status : "match",
+                message:"Successfully verified OTP",
+                token:token
             }
         }else{
             return {
-                status : "mismatch"
+                status : "mismatch",
+                message:"OTP does not match,please try again"
             }
         }
     }else{
-        throw 'user with given id "' + userParam.id + '" not found';
+        throw 'user with given id "' + id + '" not found';
     }
 
 }
 
-async function login({ id, password, mobile }) {
+async function login({ id, password }) {
     
-    const user = await User.findOne({ id , mobile});
+    const user = await User.findOne({ id });
     if (user && bcrypt.compareSync(password, user.hash)) {
         const token = jwt.sign({ sub: user.id }, config.secret, { expiresIn: '7d' });
         return {
-            // ...user.toJSON(),
-            token,
             status : "success",
-            message : "successfully found the user"
+            message : "successfully found the user" ,
+            token
         };
     }else{
         return {
-            status : "success",
-            message : "user not found"
+            status : "fail",
+            message : "user id or password is incorrect"
         }
     }
 }
@@ -214,22 +227,14 @@ async function saveInfo({id , password}){
         var hash = bcrypt.hashSync(password, 10);
         Object.assign(user,{hash:hash});
         await user.save();
-    }else{
         return {
-            status : "user not found"
-        }
-    }
-    if (user && bcrypt.compareSync(password, user.hash)) {
-        const token = jwt.sign({ sub: user.id }, config.secret, { expiresIn: '7d' });
-        return {
-            // ...user.toJSON(),
-            token,
             status : "success",
-            message : "password created successfully"
+            message : "New password created successfully"
         };
     }else{
         return {
-            status : "user not found"
+            status : "fail",
+            message:"user not found for the given id : " + id
         }
     }
 }
@@ -314,7 +319,7 @@ async function savePersonalInfo({id,name,gender,birthDate}){
         await user.save();
         return {
             status:"success",
-            message:"personal info saved success"
+            message:"personal info saved successfully"
         }
     }
     else{

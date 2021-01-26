@@ -12,10 +12,12 @@ module.exports = {
         // which I prepare and named according to my collection name
         const data = require('../assets/mongoDefaultData');
         for(let school of data.documents) {
-          var binImage = pathToImage(school.logo);
-          school.logo = {
-            data:binImage,
-            contentType:'image/png'
+          if(school.logo === "ChoongangUniversity" || school.logo === "ChoongangDajinHighSchool"){
+            var binImage = pathToImage(school.logo);
+            school.logo = {
+              data:binImage,
+              contentType:'image/png'
+            }
           }
         }
         console.log("data=> ",data.documents);

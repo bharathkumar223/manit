@@ -28,7 +28,7 @@ const authenticateJWT = (req, res, next) => {
 
 // routes
 router.get('/search', authenticateJWT ,search);
-router.post('/school/save', authenticateJWT ,save);
+router.post('/save', authenticateJWT ,save);
 router.get('/getusers/school', authenticateJWT ,matchSameSchool);
 router.post('/getusers/univ', authenticateJWT ,matchSameUniv);
 router.post('/upload', authenticateJWT ,upload.array('file', 12) , uploadImage);

@@ -30,7 +30,7 @@ router.post('/login', login);
 router.post('/signup/otp/request', requestOTP);
 router.post('/signup/otp/resend', resendOTP);
 router.post('/signup/otp/validate', validateOTP);
-router.post('/signup/save', saveInfo);
+router.post('/signup/save/credential', saveInfo);
 router.post('/signup/save/personalInfo',  authenticateJWT,savePersonalInfo);
 router.get('/signup/id/validation', isIdAvailable);
 router.get('/hobbies/get', getHobbies);
@@ -54,14 +54,14 @@ function login(req, res, next) {
 }
 
 function requestOTP(req, res, next) {
-    userService.requestOTP(req.body)
-        .then(response => res.json(response))
+    userService.requestOTP(res,req.body)
+        .then(response => response)
         .catch(err => next(err));
 }
 
 function resendOTP(req, res, next) {
-    userService.resendOTP(req.body)
-        .then(response => res.json(response))
+    userService.resendOTP(res,req.body)
+        .then(response => response)
         .catch(err => next(err));
 }
 

@@ -2,17 +2,13 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const schema = new Schema({
-    id: { type: String, unique: true, required: true },
-    name: { type: String, unique: true, required: true },
+    id: { type: String, },
+    name: { type: String, required: true },
     schoolType : { type: String},
-    address : { type: String},
     enrollment: { type: String },
-    grade: { type: String },
     department  : { type: String },
-    studentId  : { type: String },
-    class  : { type: String },isConstant:true,
+    yearOfEntrance  : { type: String },
     createdDate: { type: Date, default: Date.now },
-    isConstant:{type:Boolean, default:false}
 });
 
 schema.set('toJSON', {

@@ -6,8 +6,8 @@ const schema = new Schema({
     schoolType : { type: String},
     address : { type: String},
     logo:{
-        data: {type:Buffer, required:true},
-        contentType: {type:String , required:true}
+        data: {type:Buffer},
+        contentType: {type:String }
     }
 },{collection:'SchoolList'});
 

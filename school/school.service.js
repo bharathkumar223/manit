@@ -1,6 +1,7 @@
 const { School} = require('../_helpers/db');
 const db = require('../_helpers/db');
 const SchoolList = db.SchoolList
+const User = db.User
 module.exports = {
     search,
     save,
@@ -27,6 +28,13 @@ var schoolSearch = [
     { name: 'Beckhyun Middle School', address: 'Dummy address for Beckhyun Middle School'  }
 ];
 
+function returnResponse(status,message){
+    return {
+        status:status,
+        message:message
+    }
+}
+
 async function search({searchString}){
 
     return SchoolList.find({name:{$regex:searchString,$options:'i'}}, function (err, docs) {
@@ -38,7 +46,7 @@ async function search({searchString}){
             }
         }else{
             return {
-                schools:docs
+                "schools":docs
             }
         }
     });
@@ -73,29 +81,83 @@ async function search({searchString}){
 
 async function save(schoolParam){
 
-    if(schoolParam.schoolType === 'highSchool'){
-        return saveSchoolInfo(schoolParam);
+    if(schoolParam.schoolType === 'high'){
+        return savehighSchoolInfo(schoolParam);
+    }else if (schoolParam.schoolType === 'mid'){
+        return savemidSchoolInfo(schoolParam);
     }else if(schoolParam.schoolType === 'university'){
         return saveUnivInfo(schoolParam);
     }else{
         return {
-            status : "required param school type missing,unable to  save info"
+            status : "fail",
+            message:"required param school type missing,unable to  save info"
         }
     }
 }
 
-async function saveSchoolInfo(schoolParam){
-    
-    const school = await School.findOne({ id });
-    if (school) {
-        Object.assign(school,schoolParam);
-        await school.save();
+async function savehighSchoolInfo(schoolParam){
+
+    const user = await User.findOne({ id : schoolParam.id });
+    if (user) {
+        if(user.highSchoolId){
+            returnResponse("fail","High School Info has already been saved for the user , with verification status :  " + user.highSchoolVerificationStatus);
+        }else{
+            const school = new School(schoolParam);
+            if (school) {
+                Object.assign(user,{highSchoolId:school._id,highSchoolVerificationStatus:"Pending"});
+                await user.save();
+                await school.save();
+                returnResponse("success","successfully saved the school Info");
+            }else{
+                returnResponse("fail","unable to save school info, please try again");
+            }
+        }
     }else{
-        const newSchool = new School(highSchoolParam);
-        await newSchool.save();
+        returnResponse("fail,","user not found for the given id : " + id);
     }
-    return {
-        status : "successfully saved the school Info"
+}
+
+async function savemidSchoolInfo(schoolParam){
+
+    const user = await User.findOne({ id : schoolParam.id });
+    if (user) {
+        if(user.midSchoolId){
+            returnResponse("fail","Mid School Info has already been saved for the user , with verification status :  " + user.midSchoolVerificationStatus);
+        }else{
+            const school = new School(schoolParam);
+            if (school) {
+                Object.assign(user,{midSchoolId:school._id,midSchoolVerificationStatus:"Pending"});
+                await user.save();
+                await school.save();
+                returnResponse("success","successfully saved the school Info");
+            }else{
+                returnResponse("fail","unable to save school info, please try again");
+            }
+        }
+    }else{
+        returnResponse("fail,","user not found for the given id : " + id);
+    }
+}
+
+async function saveUnivInfo(schoolParam){
+
+    const user = await User.findOne({ id : schoolParam.id });
+    if (user) {
+        if(user.universityId){
+            returnResponse("fail","University Info has already been saved for the user , with verification status :  " + user.universityVerificationStatus);
+        }else{
+            const school = new School(schoolParam);
+            if (school) {
+                Object.assign(user,{universityId:school._id,universityVerificationStatus:"Pending"});
+                await user.save();
+                await school.save();
+                returnResponse("success","successfully saved the school Info");
+            }else{
+                returnResponse("fail","unable to save school info, please try again");
+            }
+        }
+    }else{
+        returnResponse("fail,","user not found for the given id : " + id);
     }
 }
 
