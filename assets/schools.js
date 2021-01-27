@@ -1,5 +1,4 @@
 var mongoose = require('mongoose');
-const pathToImage = require('../Images/Image.utils')
 
 exports.documents = [
   {

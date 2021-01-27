@@ -36,8 +36,8 @@ router.post('/upload', authenticateJWT ,upload.array('file', 12) , uploadImage);
 module.exports = router;
 
 function search(req, res, next) {
-    schoolService.search(res,req.body)
-        .then(response => response)
+    schoolService.search(req.body)
+        .then(response => res.json(response))
         .catch(err => next(err));
 }
 
@@ -54,8 +54,8 @@ function matchSameSchool(req, res, next) {
 }
 
 function matchSameUniv(req, res, next) {
-    schoolService.matchSameUniv(res,req.body)
-        .then(response => response)
+    schoolService.matchSameUniv(req.body)
+        .then(response => res.json(response))
         .catch(err => next(err));
 }
 

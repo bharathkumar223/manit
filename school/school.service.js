@@ -35,64 +35,43 @@ function returnResponse(status,message){
     }
 }
 
-async function search(res,{id,searchString}){
+async function search({id,searchString}){
 
     const user = await User.findOne({ id });
-    if (user) {
-        const isUniversityChosen = user.universityId?true:false;
-        const isHighSchoolChosen = user.highSchoolId?true:false;
-        const isMidSchoolChosen = user.midSchoolId?true:false;
-         SchoolList.find({name:{$regex:searchString,$options:'i'}}, function (err, docs) {
-            console.log("docs => ",docs);
-            if(err){
-                return {
-                    status:'fail',
-                    message:err
-                }
-            }else{
-                res.status(200).json({
-                    isSchoolChosen:{
-                        isUniversityChosen:isUniversityChosen,
-                        isHighSchoolChosen:isHighSchoolChosen,
-                        isMidSchoolChosen:isMidSchoolChosen
-                    },
-                    schools:docs
-                })
+        if (user) {
+            // const isUniversityChosen = user.universityId?true:false;
+            // const isHighSchoolChosen = user.highSchoolId?true:false;
+            // const isMidSchoolChosen = user.midSchoolId?true:false;
+            console.log(user);
+        }else{
+            return {
+                status : "fail",
+                message : "user not found for the given id : " + id
             }
-        });
-    }else{
-        return {
-            status : "fail",
-            message : "user not found for the given id : " + id
         }
-    }
-    // if(school){
-    //     for(let school in schools){
-            
-    //     }
-    //     return {
-    //         schools:school
-    //     }
-    // }else{
-    //     return {
-    //         schools:'err'
-    //     }
-    // }
-    // School.find(
-    //     { "name": { "$regex": searchString , "$options": "i" } },
-    //     function(err,docs) { 
-    //         if(err){
-    //             return {
-    //                 status : err.error
-    //             }
-    //         }else{
-    //             return {
-    //                 ...docs.toJSON()
-    //             }
-    //         }
-    //     }
 
-    // );
+    return new Promise((resolve, reject) => {
+        
+            SchoolList.find({name:{$regex:searchString,$options:'i'}}, function (err, docs) {
+                console.log("docs => ",docs);
+                if(err){
+                    reject({
+                        status:'fail',
+                        message:err
+                    })
+                }else{
+                    resolve({
+                        isSchoolChosen:{
+                            isUniversityChosen:user.universityId?true:false,
+                            isHighSchoolChosen:user.highSchoolId?true:false,
+                            isMidSchoolChosen:user.midSchoolId?true:false
+                        },
+                        schools:docs
+                    })
+                }
+            });
+        
+      })
 }
 
 async function save(schoolParam){
@@ -231,96 +210,94 @@ async function saveUnivInfo({id, schoolName,enrollment, yearOfEntrance, departme
     }
 }
 
-// async function saveUnivInfo(univParam){
-    
-//     const univ = await School.findOne({ id });
-//     if (univ) {
-//         Object.assign(univ,univParam);
-//         await univ.save();
-//     }else{
-//         const newUniv = new School(univParam);
-//         await newUniv.save();
-//     }
-//     return {
-//         status : "successfully saved the university Info"
-//     }
-// }
-
 async function matchSameSchool({schoolName}){
 
-    School.find({name: schoolName}, function(err, docs) {
+    return new Promise((resolve, reject) => {
 
-        if(err){
-            return {
-                status : err.error
-            }
-        }else{
-            // Map the docs into an array of just the ids of the user
-            var ids = docs.map(function(doc) { return doc.id; });
-        
-            // Get the users whose ids are in the set
-            User.find({id: {$in: ids}}, function(err, docs) {
-                
-                if(err){
-                    return {
-                        status : err.error
-                    }
-                }else{
-                    return {
-                        users : docs.map(function(doc){
-                            return {
-                                id:doc.id,
-                                name:doc.name
-                            }
+        School.find({ $and: [
+                 {name: schoolName},
+                 { $or: [{ schoolType:"mid" }, {schoolType:"high"}] }]},
+                 function(err, docs) {
+                    console.log("school=>",docs);
+                    if(err){
+                        reject( {
+                            status : "fail",
+                            message:err.error
                         })
+                    }else{
+                        // Map the docs into an array of just the ids of the user
+                        var ids = docs.map(function(doc) { return doc.userId; });
+                    
+                        // Get the users whose ids are in the set
+                        User.find({id: {$in: ids}}, function(err, docs) {
+                            console.log("users=>",docs);
+                            if(err){
+                                reject( {
+                                    status : "fail",
+                                    message:err.error
+                                })
+                            }else{
+                                resolve({
+                                    users:docs.map(function(doc){
+                                        return {
+                                            id:doc.id,
+                                            name:doc.name
+                                        };
+                                    })
+                                })
+                            }
+                        });
                     }
-                }
-
-            });
-        }
-    });
+        });
+      })
 }
 
-async function matchSameUniv(res,{universityName}){
+async function matchSameUniv({universityName}){
 
-    var result;
-     School.find({name: universityName , schoolType:"university"}, function(err, docs) {
-        console.log("school=>",docs);
-        if(err){
-            return {
-                status : "fail",
-                message:err.error
-            }
-        }else{
-            // Map the docs into an array of just the ids of the user
-            var ids = docs.map(function(doc) { return doc.userId; });
-        
-            // Get the users whose ids are in the set
-            return User.find({id: {$in: ids}}, function(err, docs) {
-                console.log("users=>",docs);
-                if(err){
-                    return {
-                        status : err.error
-                    }
-                }else{
-                    res.status(200).json({
-                        users:docs.map(function(doc){
-                            return {
-                                id:doc.id,
-                                name:doc.name
-                            };
+    return new Promise((resolve, reject) => {
+
+        School.find({name: universityName , schoolType:"university"}, function(err, docs) {
+            console.log("school=>",docs);
+            if(err){
+                reject( {
+                    status : "fail",
+                    message:err.error
+                })
+            }else{
+                // Map the docs into an array of just the ids of the user
+                var ids = docs.map(function(doc) { return doc.userId; });
+            
+                // Get the users whose ids are in the set
+                User.find({id: {$in: ids}}, function(err, docs) {
+                    console.log("users=>",docs);
+                    if(err){
+                        reject( {
+                            status : "fail",
+                            message:err.error
                         })
-                    })
-                }
+                    }else{
+                        resolve({
+                            users:docs.map(function(doc){
+                                return {
+                                    id:doc.id,
+                                    name:doc.name
+                                };
+                            })
+                        })
 
-            });
-        }
-    });
+                    }
+    
+                });
+            }
+        });
+      })
+
+     
 }
 
 async function uploadImage({ id }){
 
-    const imgFilePath = __dirname +'/uploads/'+id+'/';
+    const imgFilePath = process.cwd() +'\\assets\\Images\\'+id;
     var imageData = fs.readFileSync(imgFilePath);
     
     // Create an Image instance

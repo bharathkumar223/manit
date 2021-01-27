@@ -3,8 +3,8 @@ const Schema = mongoose.Schema;
 
 const schema = new Schema({
     requestBy: { type: String,  required: true },
-    requestTo: { type: String , required: true},
-    status:{ type:String , default:'Pending'},
+    requestTo: { type: String , required: true },
+    status:{ type:String , default:'Pending' },
     school:{ type: String , required:true},
     createdDate: { type: Date, default: Date.now }
 });
