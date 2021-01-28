@@ -6,7 +6,6 @@ const schema = new Schema({
     requestTo: { type: String , required: true },
     status:{ type:String , default:'Pending' },
     school:{ type: String , required:true},
-    createdDate: { type: Date, default: Date.now }
 });
 
 schema.index({ requestBy: 1, requestTo: 1 , school:1}, { unique: true })

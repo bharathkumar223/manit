@@ -108,10 +108,10 @@ async function getVerificationRequest({id}){
     })
 }
 
-async function sendOTP(res,user){
+async function sendOTP(res,user,userParam){
 
     var generatedOTP = Math.floor(100000 + Math.random() * 900000);
-    Object.assign(user,{otp:generatedOTP});
+    Object.assign(user,{otp:generatedOTP,mobile:userParam.mobile});
     await user.save();
 
     //demo test credentials from springedge
@@ -152,15 +152,13 @@ async function sendOTP(res,user){
 
 async function requestOTP(res,userParam) {
     // validate
-    if (await User.findOne({ id: userParam.id })) {
-        throw 'Device id "' + userParam.id + '" is already present';
+    const user = await User.findOne({ id: userParam.id })
+    if (user) {
+        //sendOTP
+        return sendOTP(res,user,userParam);
+    }else{
+         throw 'User not found with the given id, please signup before requesting OTP';
     }
-
-    // save user
-    const user = new User(userParam);
-
-    //sendOTP
-    return sendOTP(res,user);
 
 }
 
@@ -169,7 +167,7 @@ async function resendOTP(res,userParam) {
     const user  =  await User.findOne({ id: userParam.id});
     
     if (user) {
-        return sendOTP(res,user);
+        return sendOTP(res,user,userParam);
     }else{
         res.status(200).json({
             status:"fail",
@@ -224,18 +222,18 @@ async function saveInfo({id , password}){
 
     const user = await User.findOne({id});
     if(user){
+        return {
+            status : "fail",
+            message:"user already signed up with the id : " + id
+        }
+    }else{
         var hash = bcrypt.hashSync(password, 10);
-        Object.assign(user,{hash:hash});
-        await user.save();
+        const newUser = new User({id : id, hash:hash});
+        await newUser.save();
         return {
             status : "success",
             message : "New password created successfully"
         };
-    }else{
-        return {
-            status : "fail",
-            message:"user not found for the given id : " + id
-        }
     }
 }
 

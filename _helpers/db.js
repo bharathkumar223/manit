@@ -1,10 +1,19 @@
 const config = require('../config.json');
 const mongoose = require('mongoose');
 const mongoDefaultData = require('./mongoDefaultData')
-const connectionOptions = { useCreateIndex: true, useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false };
-mongoose.connect(process.env.MONGODB_URI || config.connectionString, connectionOptions,(err) => {
-    mongoDefaultData.initialLoad()
-});
+const connectionURL = "mongodb+srv://manito:manito@cluster0.jvjvu.mongodb.net/manito?retryWrites=true&w=majority"
+mongoose.connect(connectionURL, {
+    useNewUrlParser: true,
+    useCreateIndex: true,
+    useFindAndModify: true,
+    useUnifiedTopology: true
+},(err) => {
+         mongoDefaultData.initialLoad()
+     })
+
+// mongoose.connect(process.env.MONGODB_URI || config.connectionString, connectionOptions,(err) => {
+//     mongoDefaultData.initialLoad()
+// });
 mongoose.Promise = global.Promise;
 
 module.exports = {
