@@ -19,6 +19,7 @@ app.use(cors());
 app.use('/api', require('./users/users.controller'));
 app.use('/school', require('./school/school.controller'));
 app.use('/hobby', require('./hobby/hobby.controller'));
+app.use('/document', require('./documentVerification/document.verification.controller'));
 
 // global error handler
 app.use(errorHandler);

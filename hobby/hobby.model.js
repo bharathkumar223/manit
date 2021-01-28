@@ -3,10 +3,7 @@ const Schema = mongoose.Schema;
 
 const schema = new Schema({
     name: { type: String,  required: true },
-    sticker: {
-        data: {type:Buffer},
-        contentType: {type:String }
-    },
+    sticker: { type: String , required: true },
 });
 
 // schema.index({ requestBy: 1, requestTo: 1 , school:1}, { unique: true })

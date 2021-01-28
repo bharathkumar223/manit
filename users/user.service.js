@@ -5,6 +5,7 @@ const db = require('../_helpers/db');
 var springedge = require('springedge');
 const User = db.User;
 const UserVerification = db.UserVerification
+const globals = require('../globals')
 
 module.exports = {
     requestOTP,
@@ -153,12 +154,22 @@ async function sendOTP(res,user,userParam){
 async function requestOTP(res,userParam) {
     // validate
     const user = await User.findOne({ id: userParam.id })
-    if (user) {
-        //sendOTP
-        return sendOTP(res,user,userParam);
+    const koreanPhoneRegex = new RegExp(globals.koreanMobileRegex);
+    if(koreanPhoneRegex.test(userParam.mobile)){
+        if (user) {
+            //sendOTP
+            return sendOTP(res,user,userParam);
+        }else{
+             throw 'User not found with the given id, please signup before requesting OTP';
+        }
     }else{
-         throw 'User not found with the given id, please signup before requesting OTP';
+        // return {
+        //     status:"fail",
+        //     message:"mobile is not in the format of korean phone number"
+        // }
+        throw "mobile is not in the format of korean phone number"
     }
+    
 
 }
 

@@ -1,6 +1,6 @@
 const config = require('../config.json');
 const mongoose = require('mongoose');
-const mongoDefaultData = require('./mongoDefaultData')
+const mongoDefaultData = require('./school')
 const connectionURL = "mongodb+srv://manito:manito@cluster0.jvjvu.mongodb.net/manito?retryWrites=true&w=majority"
 mongoose.connect(connectionURL, {
     useNewUrlParser: true,
