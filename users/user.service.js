@@ -14,8 +14,6 @@ module.exports = {
     login,
     saveInfo,
     getById,
-    getHobbies,
-    saveHobbies,
     isIdAvailable,
     savePersonalInfo,
     requestVerification,
@@ -113,7 +111,7 @@ async function getVerificationRequest({id}){
 async function getUserInfo(userParam){
     
     console.log("userParam=>",userParam)
-    const user = await User.findOne({id:userParam.user})
+    const user = await User.findOne({id:userParam.userId})
     if(user){
         console.log("user=>",user)
         return {
@@ -131,10 +129,10 @@ async function getUserInfo(userParam){
 
 }
 
-async function sendOTP(res,user,userParam){
+async function sendOTP(user){
 
     var generatedOTP = Math.floor(100000 + Math.random() * 900000);
-    Object.assign(user,{otp:generatedOTP,mobile:userParam.mobile});
+    Object.assign(user,{otp:generatedOTP});
     await user.save();
 
 
@@ -150,73 +148,75 @@ async function sendOTP(res,user,userParam){
         'format': 'json'
         };
         
-        springedge.messages.send(params, 5000, function (err, response) {
+        return new Promise((resolve, reject) => {
+            springedge.messages.send(params, 5000, function (err, response) {
         
-            if (response.status) {
-                console.log("response=> ",response);
-                res.status(200).json({
-                    status:"success",
-                    message:"successfully sent the OTP",
-                    OtpDetails:response
-                });
-            }else{
-                console.log("error => ",response.error);
-                res.status(200).json({
-                    status:"fail",
-                    message:"Unable to send OTP",
-                    OtpDetails:response
-                });
-            }
-        })
-        
+                if (response.status) {
+                    console.log("response=> ",response);
+                    resolve({
+                        status:"success",
+                        message:"successfully sent the OTP",
+                        OtpDetails:response
+                    })
+                }else{
+                    console.log("error => ",response.error);
+                    reject({
+                        status:"fail",
+                        message:"Unable to send OTP",
+                        OtpDetails:response
+                    })
+                }
+            })
+        }) 
 }
 
 
 
 
 
-async function requestOTP(res,userParam) {
+async function requestOTP(userParam) {
     // validate
-    const user = await User.findOne({ id: userParam.id })
+    const user = await User.findOne({ id: userParam.userId })
     const koreanPhoneRegex = new RegExp(globals.koreanMobileRegex);
     if(koreanPhoneRegex.test(userParam.mobile)){
         if (user) {
             //sendOTP
-            return sendOTP(res,user,userParam);
+            Object.assign(user,{mobile:userParam.mobile});
+            return sendOTP(user);
         }else{
-             throw 'User not found with the given id, please signup before requesting OTP';
+            return {
+                status:"fail",
+                message:"User not found with the given id, please signup before requesting OTP"
+            }
         }
     }else{
-        // return {
-        //     status:"fail",
-        //     message:"mobile is not in the format of korean phone number"
-        // }
-        throw "mobile is not in the format of korean phone number"
-    }
-    
-
-}
-
-async function resendOTP(res,userParam) {
-    
-    const user  =  await User.findOne({ id: userParam.id});
-    
-    if (user) {
-        return sendOTP(res,user,userParam);
-    }else{
-        res.status(200).json({
+        return {
             status:"fail",
-            messsage:"user with given id not found , id : " + userParam.id
-        });
+            message:"mobile is not in the format of korean phone number"
+        }
+    }
+}
+
+async function resendOTP(userParam) {
+    
+    const user  =  await User.findOne({ id: userParam.userId});
+    
+    if (user) {
+        return sendOTP(user);
+    }else{
+        return {
+            status:"fail",
+            messsage:"user with given id not found , id : " + userParam.userId
+        }
     }
 
 }
 
-async function validateOTP({otp,id}) {
+async function validateOTP(userParam) {
 
-    const user = await User.findOne({ id });
+    const user = await User.findOne({ id : userParam.userId });
     if (user) {
-        if (otp === user.otp){
+        if (user.otp === userParam.otp){
             return {
                 status : "match",
                 message:"Successfully verified OTP",
@@ -228,7 +228,7 @@ async function validateOTP({otp,id}) {
             }
         }
     }else{
-        throw 'user with given id "' + id + '" not found';
+        throw 'user with given id "' + userParam.userId + '" not found';
     }
 
 }
@@ -272,60 +272,6 @@ async function saveInfo({id , password}){
     }
 }
 
-var hobbies = [
-    { name: 'Traveler' },
-    { name: 'Painter' },
-    { name: 'Poker Player'  },
-    { name: 'Chess Player' },
-    { name: 'Football Fan'},
-    { name: 'Console Gamer'  },
-    { name: 'Environmentalist'  },
-    { name: 'gourmet' },
-];
-
-async function getHobbies({ id }) {
-
-    const user = await User.findOne({id});
-   
-    if(user){
-        var oldHobbies = user.hobbies;
-        if(oldHobbies.length > 0){
-            var newHobbies = hobbies.filter(n => !oldHobbies.includes(n));
-            return {
-                hobbies:newHobbies
-            }
-        }else{
-            return {
-                hobbies:hobbies
-            }
-        }
-    }else{
-        return {
-            status : "user not found for the provided id : " + id
-        }
-    }
-}
-
-async function saveHobbies({ id , hobbies}) {
-    
-    const user = await User.findOne({id});
-   
-    if(user){
-        var oldHobbies = user.hobbies;
-        if(oldHobbies.length > 0){
-            var newHobbies = oldHobbies.concat(hobbies);
-            Object.assign(user,{hobbies:newHobbies});
-        }else{
-            Object.assign(user,{hobbies:hobbies});
-        }
-        await user.save();
-    }else{
-        return {
-            status : "user not found for the provided id : " + id
-        }
-    }
-}
-
 async function isIdAvailable({id}){
     const user = await User.findOne({id});
 
@@ -343,12 +289,14 @@ async function isIdAvailable({id}){
     }
 }
 
-async function savePersonalInfo({id,name,gender,birthDate}){
+async function savePersonalInfo(userParam){
 
-    const user = await User.findOne({id});
+    const user = await User.findOne({id : userParam.userId});
 
     if(user){
-        Object.assign(user,{name:name,gender:gender,birthDate:birthDate});
+        Object.assign(user,{name:userParam.name,
+                            gender:userParam.gender,
+                            birthDate:userParam.birthDate});
         await user.save();
         return {
             status:"success",
@@ -358,7 +306,7 @@ async function savePersonalInfo({id,name,gender,birthDate}){
     else{
         return {
             status:"fail",
-            message:"user with the id " + id + " doest not exist"
+            message:"user with the id " + userParam.userId + " doest not exist"
         }
     }
 

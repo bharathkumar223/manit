@@ -3,7 +3,10 @@ const Schema = mongoose.Schema;
 
 const schema = new Schema({
     id: { type: String,  required: true },
-    document: { type: String , required: true},
+    document: {
+        data: {type:Buffer},
+        contentType: {type:String }
+    },
     school: { type: String , required: true},
     status:{ type:String , default:'Pending'},
 });

@@ -23,11 +23,11 @@ async function getHobbies(){
         }
 }
 
-async function saveHobbies({id, hobbies}){
+async function saveHobbies({userId, hobbies}){
 
     if (typeof hobbies !== 'undefined' && hobbies.length > 0) {
         // the array is defined and has at least one element
-        const user = await User.findOne({id});
+        const user = await User.findOne({id:userId});
         if(user){
             Object.assign(user,{hobbies:hobbies});
             await user.save();
@@ -38,7 +38,7 @@ async function saveHobbies({id, hobbies}){
         }else{
             return {
                 status : "fail",
-                message:"user not found for the given id : " + id
+                message:"user not found for the given id : " + userId
             }
         }
     }else{

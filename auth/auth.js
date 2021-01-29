@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config.json');
 
-module.exports = function setCurrentUser(req, res, next) {
+module.exports = function authenticateJWT(req, res, next) {
     
     const authHeader = req.headers.authorization;
 
@@ -13,7 +13,7 @@ module.exports = function setCurrentUser(req, res, next) {
                 return res.sendStatus(403);
             }
 
-            // req.user = user;
+            req.body.userId = user.sub;
             console.log("user => ",user);
             next();
         });

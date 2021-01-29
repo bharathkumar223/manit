@@ -3,28 +3,7 @@ const router = express.Router();
 const schoolService = require('./school.service');
 var multer  = require('multer')
 var upload = multer({ dest: __dirname +'uploads/' });
-const jwt = require('jsonwebtoken');
-const config = require('../config.json');
-
-const authenticateJWT = (req, res, next) => {
-    const authHeader = req.headers.authorization;
-
-    if (authHeader) {
-        const token = authHeader.split(' ')[1];
-
-        jwt.verify(token, config.secret, (err, user) => {
-            if (err) {
-                return res.sendStatus(403);
-            }
-
-            // req.user = user;
-            console.log("user => ",user);
-            next();
-        });
-    } else {
-        res.sendStatus(401);
-    }
-};
+const authenticateJWT = require('../auth/auth')
 
 // routes
 router.get('/search', authenticateJWT ,search);

@@ -35,18 +35,15 @@ function returnResponse(status,message){
     }
 }
 
-async function search({id,searchString}){
+async function search({userId,searchString}){
 
-    const user = await User.findOne({ id });
+    const user = await User.findOne({ id:userId });
         if (user) {
-            // const isUniversityChosen = user.universityId?true:false;
-            // const isHighSchoolChosen = user.highSchoolId?true:false;
-            // const isMidSchoolChosen = user.midSchoolId?true:false;
             console.log(user);
         }else{
             return {
                 status : "fail",
-                message : "user not found for the given id : " + id
+                message : "user not found for the given id : " + userId
             }
         }
 
@@ -90,8 +87,8 @@ async function save(schoolParam){
     }
 }
 
-async function savehighSchoolInfo({id, schoolName,enrollment, yearOfEntrance , schoolType}){
-    const user = await User.findOne({ id });
+async function savehighSchoolInfo({userId, schoolName,enrollment, yearOfEntrance , schoolType}){
+    const user = await User.findOne({ id : userId});
     if (user) {
         if(user.highSchoolId){
             return { 
@@ -100,7 +97,7 @@ async function savehighSchoolInfo({id, schoolName,enrollment, yearOfEntrance , s
             }
         }else{
             const school = new School({
-                userId:id,
+                userId:userId,
                 name:schoolName,
                 schoolType:schoolType,
                 enrollment:enrollment,
@@ -124,14 +121,14 @@ async function savehighSchoolInfo({id, schoolName,enrollment, yearOfEntrance , s
     }else{
         return{
             status:"fail",
-            message:"user not found for the given id : " + id
+            message:"user not found for the given id : " + userId
         }
     }
 }
 
-async function savemidSchoolInfo({id, schoolName,enrollment, yearOfEntrance , schoolType}){
+async function savemidSchoolInfo({userId, schoolName,enrollment, yearOfEntrance , schoolType}){
 
-    const user = await User.findOne({ id });
+    const user = await User.findOne({ id :userId});
     if (user) {
         if(user.midSchoolId){
             return { 
@@ -140,7 +137,7 @@ async function savemidSchoolInfo({id, schoolName,enrollment, yearOfEntrance , sc
             }
         }else{
             const school = new School({
-                userId:id,
+                userId:userId,
                 name:schoolName,
                 schoolType:schoolType,
                 enrollment:enrollment,
@@ -164,14 +161,14 @@ async function savemidSchoolInfo({id, schoolName,enrollment, yearOfEntrance , sc
     }else{
         return{
             status:"fail",
-            message:"user not found for the given id : " + id
+            message:"user not found for the given id : " + userId
         }
     }
 }
 
-async function saveUnivInfo({id, schoolName,enrollment, yearOfEntrance, department , schoolType}){
+async function saveUnivInfo({userId, schoolName,enrollment, yearOfEntrance, department , schoolType}){
 
-    const user = await User.findOne({ id });
+    const user = await User.findOne({ id :userId});
     if (user) {
         if(user.universityId){
             return { 
@@ -180,7 +177,7 @@ async function saveUnivInfo({id, schoolName,enrollment, yearOfEntrance, departme
             }
         }else{
             const school = new School({
-                userId:id,
+                userId:userId,
                 name:schoolName,
                 schoolType:schoolType,
                 enrollment:enrollment,
@@ -205,7 +202,7 @@ async function saveUnivInfo({id, schoolName,enrollment, yearOfEntrance, departme
     }else{
         return {
             status:"fail",
-            message:"user not found for the given id : " + id
+            message:"user not found for the given id : " + userId
         }
     }
 }

@@ -1,44 +1,20 @@
 ﻿const express = require('express');
 const router = express.Router();
 const userService = require('./user.service');
-const config = require('./../config.json');
-const jwt = require('jsonwebtoken');
-
-const authenticateJWT = (req, res, next) => {
-    console.log("inside auth jwt");
-    const authHeader = req.headers.authorization;
-
-    if (authHeader) {
-        const token = authHeader.split(' ')[1];
-
-        jwt.verify(token, config.secret, (err, user) => {
-            if (err) {
-                return res.sendStatus(403);
-            }
-
-            // req.user = user;
-            console.log("user => ",user);
-            req.body.user = user.sub
-            req.body.token = token
-            next();
-        });
-    } else {
-        res.sendStatus(401);
-    }
-};
+const authenticateJWT = require('../auth/auth')
 
 // routes
 
 router.get('/get/userInfo',authenticateJWT,getUserInfo);
 router.post('/login', login);
+
 router.post('/signup/otp/request',  authenticateJWT, requestOTP);
 router.post('/signup/otp/resend',  authenticateJWT, resendOTP);
 router.post('/signup/otp/validate',  authenticateJWT, validateOTP);
 router.post('/signup/save/credential', saveInfo);
 router.post('/signup/save/personalInfo',  authenticateJWT,savePersonalInfo);
 router.get('/signup/id/validation', isIdAvailable);
-router.get('/hobbies/get', getHobbies);
-router.post('/hobbies/save', saveHobbies);
+
 router.post('/request/verification', authenticateJWT,requestVerification);
 router.post('/get/verification/request',authenticateJWT, getVerificationRequest);
 router.post('/respond/verification/request',authenticateJWT, respondVerificationRequest);
@@ -64,14 +40,14 @@ function getUserInfo(req, res, next) {
 }
 
 function requestOTP(req, res, next) {
-    userService.requestOTP(res,req.body)
-        .then(response => response)
+    userService.requestOTP(req.body)
+        .then(response => res.json(response))
         .catch(err => next(err));
 }
 
 function resendOTP(req, res, next) {
-    userService.resendOTP(res,req.body)
-        .then(response => response)
+    userService.resendOTP(req.body)
+        .then(response => res.json(response))
         .catch(err => next(err));
 }
 
@@ -83,18 +59,6 @@ function validateOTP(req, res, next) {
 
 function saveInfo(req, res, next) {
     userService.saveInfo(req.body)
-        .then(response => res.json(response))
-        .catch(err => next(err));
-}
-
-function getHobbies(req, res, next) {
-    userService.getHobbies(req.body)
-        .then(response => res.json(response))
-        .catch(err => next(err));
-}
-
-function saveHobbies(req, res, next) {
-    userService.saveHobbies(req.body)
         .then(response => res.json(response))
         .catch(err => next(err));
 }
