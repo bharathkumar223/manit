@@ -193,11 +193,9 @@ async function validateOTP({otp,id}) {
     const user = await User.findOne({ id });
     if (user) {
         if (otp === user.otp){
-            const token = jwt.sign({ sub: user.id }, config.secret, { expiresIn: '7d' });
             return {
                 status : "match",
                 message:"Successfully verified OTP",
-                token:token
             }
         }else{
             return {
@@ -241,9 +239,11 @@ async function saveInfo({id , password}){
         var hash = bcrypt.hashSync(password, 10);
         const newUser = new User({id : id, hash:hash});
         await newUser.save();
+        const token = jwt.sign({ sub: id }, config.secret, { expiresIn: '7d' });
         return {
             status : "success",
-            message : "New password created successfully"
+            message : "New password created successfully",
+            token:token
         };
     }
 }

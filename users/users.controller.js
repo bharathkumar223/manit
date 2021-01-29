@@ -27,9 +27,9 @@ const authenticateJWT = (req, res, next) => {
 
 // routes
 router.post('/login', login);
-router.post('/signup/otp/request', requestOTP);
-router.post('/signup/otp/resend', resendOTP);
-router.post('/signup/otp/validate', validateOTP);
+router.post('/signup/otp/request',  authenticateJWT, requestOTP);
+router.post('/signup/otp/resend',  authenticateJWT, resendOTP);
+router.post('/signup/otp/validate',  authenticateJWT, validateOTP);
 router.post('/signup/save/credential', saveInfo);
 router.post('/signup/save/personalInfo',  authenticateJWT,savePersonalInfo);
 router.get('/signup/id/validation', isIdAvailable);
