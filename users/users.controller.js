@@ -18,6 +18,8 @@ const authenticateJWT = (req, res, next) => {
 
             // req.user = user;
             console.log("user => ",user);
+            req.body.user = user.sub
+            req.body.token = token
             next();
         });
     } else {
@@ -26,6 +28,8 @@ const authenticateJWT = (req, res, next) => {
 };
 
 // routes
+
+router.get('/get/userInfo',authenticateJWT,getUserInfo);
 router.post('/login', login);
 router.post('/signup/otp/request',  authenticateJWT, requestOTP);
 router.post('/signup/otp/resend',  authenticateJWT, resendOTP);
@@ -49,6 +53,12 @@ module.exports = router;
 
 function login(req, res, next) {
     userService.login(req.body)
+        .then(response => res.json(response))
+        .catch(err => next(err));
+}
+
+function getUserInfo(req, res, next) {
+    userService.getUserInfo(req.body)
         .then(response => res.json(response))
         .catch(err => next(err));
 }

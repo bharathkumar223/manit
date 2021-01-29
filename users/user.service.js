@@ -20,7 +20,8 @@ module.exports = {
     savePersonalInfo,
     requestVerification,
     getVerificationRequest,
-    respondVerificationRequest
+    respondVerificationRequest,
+    getUserInfo
 };
 
 async function respondVerificationRequest({id, requestById, school, status}){
@@ -109,11 +110,31 @@ async function getVerificationRequest({id}){
     })
 }
 
+async function getUserInfo(userParam){
+    
+    console.log("userParam=>",userParam)
+    const user = await User.findOne({id:userParam.user})
+    if(user){
+        console.log("user=>",user)
+        return {
+            success:"success",
+            user:user
+        }
+    }else{
+        return {
+            status:"fail"
+        }
+    }
+    
+
+}
+
 async function sendOTP(res,user,userParam){
 
     var generatedOTP = Math.floor(100000 + Math.random() * 900000);
     Object.assign(user,{otp:generatedOTP,mobile:userParam.mobile});
     await user.save();
+
 
     //demo test credentials from springedge
     var params = {
@@ -123,6 +144,7 @@ async function sendOTP(res,user,userParam){
             user.mobile //Moblie Number
         ],
         'message': 'Hi, this is a test message from spring edge',
+        // 'message': 'OTP for manito app verification : ' + generatedOTP,
         'format': 'json'
         };
         
