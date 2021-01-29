@@ -117,12 +117,14 @@ async function getUserInfo(userParam){
     if(user){
         console.log("user=>",user)
         return {
-            success:"success",
+            status:"success",
+            message:"user found",
             user:user
         }
     }else{
         return {
-            status:"fail"
+            status:"fail",
+            message:"Unable to find the user with given credentials"
         }
     }
     
