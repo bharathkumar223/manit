@@ -58,6 +58,7 @@ async function search({userId,searchString}){
                     })
                 }else{
                     resolve({
+                        status : "success",
                         isSchoolChosen:{
                             isUniversityChosen:user.universityId?true:false,
                             isHighSchoolChosen:user.highSchoolId?true:false,
@@ -219,7 +220,7 @@ async function matchSameSchool({schoolName}){
                     if(err){
                         reject( {
                             status : "fail",
-                            message:err.error
+                            message:err
                         })
                     }else{
                         // Map the docs into an array of just the ids of the user
@@ -231,12 +232,13 @@ async function matchSameSchool({schoolName}){
                             if(err){
                                 reject( {
                                     status : "fail",
-                                    message:err.error
+                                    message:err
                                 })
                             }else{
                                 resolve({
                                     users:docs.map(function(doc){
                                         return {
+                                            status : "success",
                                             id:doc.id,
                                             name:doc.name
                                         };
@@ -258,7 +260,7 @@ async function matchSameUniv({universityName}){
             if(err){
                 reject( {
                     status : "fail",
-                    message:err.error
+                    message:err
                 })
             }else{
                 // Map the docs into an array of just the ids of the user
@@ -270,12 +272,13 @@ async function matchSameUniv({universityName}){
                     if(err){
                         reject( {
                             status : "fail",
-                            message:err.error
+                            message:err
                         })
                     }else{
                         resolve({
                             users:docs.map(function(doc){
                                 return {
+                                    status : "success",
                                     id:doc.id,
                                     name:doc.name
                                 };

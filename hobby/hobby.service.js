@@ -44,7 +44,7 @@ async function saveHobbies({userId, hobbies}){
     }else{
         return {
             status : "fail",
-            message:"Error : Hobbies list cannot be empty"
+            message:"Hobbies list cannot be empty"
         }
     }
 }

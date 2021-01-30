@@ -182,14 +182,18 @@ async function requestOTP(userParam) {
             Object.assign(user,{mobile:userParam.mobile});
             return sendOTP(user);
         }else{
-            // return {
-            //     status:"fail",
-            //     message:"User not found with the given id, please signup before requesting OTP"
-            // }
-            throw "User not found with the given id, please signup before requesting OTP"
+            return {
+                status:"fail",
+                message:"User not found with the given id, please signup before requesting OTP"
+            }
+            // throw "User not found with the given id, please signup before requesting OTP"
         }
     }else{
-        throw "mobile is not in the format of korean phone number"
+        return {
+            status:"fail",
+            message:"mobile is not in the format of korean phone number"
+        }
+        // throw "mobile is not in the format of korean phone number"
     }
 }
 
@@ -200,7 +204,11 @@ async function resendOTP(userParam) {
     if (user) {
         return sendOTP(user);
     }else{
-        throw "user with given id not found , id : " + userParam.userId
+        return {
+            status:"fail",
+            message:"user with given id not found , id : " + userParam.userId
+        }
+        // throw "user with given id not found , id : " + userParam.userId
     }
 
 }
@@ -211,18 +219,22 @@ async function validateOTP(userParam) {
     if (user) {
         if (user.otp === userParam.otp){
             return {
-                status : "match",
+                status : "success",
                 message:"Successfully verified OTP",
             }
         }else{
-            // return {
-            //     status : "mismatch",
-            //     message:"OTP does not match,please try again"
-            // }
-            throw "OTP does not match,please try again"
+            return {
+                status : "fail",
+                message:"OTP does not match,please try again"
+            }
+            // throw "OTP does not match,please try again"
         }
     }else{
-        throw 'user with given id "' + userParam.userId + '" not found';
+        return {
+            status : "fail",
+            message:"user with given id " + userParam.userId + " not found"
+        }
+        // throw 'user with given id "' + userParam.userId + '" not found';
     }
 
 }
@@ -238,11 +250,11 @@ async function login({ id, password }) {
             token
         };
     }else{
-        throw "user id or password is incorrect"
-        // return {
-        //     status : "fail",
-        //     message : "user id or password is incorrect"
-        // }
+        // throw "user id or password is incorrect"
+        return {
+            status : "fail",
+            message : "user id or password is incorrect"
+        }
     }
 }
 
@@ -250,11 +262,11 @@ async function saveInfo({id , password}){
 
     const user = await User.findOne({id});
     if(user){
-        // return {
-        //     status : "fail",
-        //     message:"user already signed up with the id : " + id
-        // }
-        throw "user already signed up with the id : " + id
+        return {
+            status : "fail",
+            message:"user already signed up with the id : " + id
+        }
+        // throw "user already signed up with the id : " + id
     }else{
         var hash = bcrypt.hashSync(password, 10);
         const newUser = new User({id : id, hash:hash});
