@@ -25,8 +25,15 @@ function jwt() {
             '/api/signup/otp/resend',
             '/api/signup/otp/validate',
             '/api/signup/save',
-            '/api/signup/id/validation'
-            
+            '/api/signup/id/validation',
+            '/school/search',
+            '/school/save',
+            '/school/getusers/univ',
+            '/school/getusers/school',
+            '/document/upload',
+            '/hobby/get',
+            '/hobby/save',
+            '/api/get/userInfo'
         ]
     });
 }
