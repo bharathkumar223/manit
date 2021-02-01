@@ -218,6 +218,8 @@ async function validateOTP(userParam) {
     const user = await User.findOne({ id : userParam.userId });
     if (user) {
         if (user.otp === userParam.otp){
+            Object.assign(user,{isVerified:true})
+            await user.save()
             return {
                 status : "success",
                 message:"Successfully verified OTP",

@@ -11,7 +11,7 @@ const schema = new Schema({
     status:{ type:String , default:'Pending'},
 });
 
-// schema.index({ requestBy: 1, requestTo: 1 , school:1}, { unique: true })
+schema.index({ requestBy: 1, requestTo: 1 , school:1}, { unique: true })
 
 schema.set('toJSON', {
     virtuals: true,

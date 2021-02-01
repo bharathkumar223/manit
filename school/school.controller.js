@@ -6,16 +6,24 @@ var upload = multer({ dest: __dirname +'uploads/' });
 const authenticateJWT = require('../auth/auth')
 
 // routes
+
 router.get('/search', authenticateJWT ,search);
 router.post('/save', authenticateJWT ,save);
 router.get('/getusers/school', authenticateJWT ,matchSameSchool);
 router.get('/getusers/univ', authenticateJWT ,matchSameUniv);
 router.post('/upload', authenticateJWT ,upload.array('file', 12) , uploadImage);
+router.get('/getById/:id', authenticateJWT ,getById);
 
 module.exports = router;
 
 function search(req, res, next) {
     schoolService.search(req.body)
+        .then(response => res.json(response))
+        .catch(err => next(err));
+}
+
+function getById(req, res, next) {
+    schoolService.getById(req.params)
         .then(response => res.json(response))
         .catch(err => next(err));
 }

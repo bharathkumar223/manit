@@ -7,7 +7,8 @@ module.exports = {
     save,
     matchSameSchool,
     matchSameUniv,
-    uploadImage
+    uploadImage,
+    getById
 };
 
 var schoolSearch = [
@@ -70,6 +71,21 @@ async function search({userId,searchString}){
             });
         
       })
+}
+
+async function getById({id}){
+    const school = await SchoolList.findOne({_id:id});
+    if(school){
+        return {
+            status:"success",
+            school:school
+        }
+    }else{
+        return{
+            status:"fail",
+            message:"school with the given id not found , id : "+id
+        }
+    }
 }
 
 async function save(schoolParam){
@@ -208,13 +224,29 @@ async function saveUnivInfo({userId, schoolName,enrollment, yearOfEntrance, depa
     }
 }
 
-async function matchSameSchool({schoolName}){
+async function matchSameSchool({schoolType,yearOfEntrance,schoolName}){
+
+    var searchCondition
+
+    
+    if(schoolType === "high"){
+                searchCondition =   { schoolType:"high" } 
+    }else if(schoolType === "mid"){
+            searchCondition =   { schoolType:"mid" }
+    }else{
+        return{
+            status:"fail",
+            message:"school type is not valid , please check the school type : "+schoolType
+        }
+    }
 
     return new Promise((resolve, reject) => {
 
         School.find({ $and: [
-                 {name: schoolName},
-                 { $or: [{ schoolType:"mid" }, {schoolType:"high"}] }]},
+            {name: schoolName},
+            searchCondition ,
+            {yearOfEntrance: yearOfEntrance}         
+        ]},
                  function(err, docs) {
                     console.log("school=>",docs);
                     if(err){
@@ -251,11 +283,15 @@ async function matchSameSchool({schoolName}){
       })
 }
 
-async function matchSameUniv({universityName}){
+async function matchSameUniv({yearOfEntrance,schoolName,department}){
 
     return new Promise((resolve, reject) => {
 
-        School.find({name: universityName , schoolType:"university"}, function(err, docs) {
+        School.find({name: schoolName ,
+                     schoolType:"university",
+                     department:department,
+                     yearOfEntrance:yearOfEntrance
+                    }, function(err, docs) {
             console.log("school=>",docs);
             if(err){
                 reject( {

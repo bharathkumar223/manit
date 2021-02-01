@@ -17,6 +17,7 @@ const schema = new Schema({
     midSchoolVerificationStatus : {type : String},
     universityId : {type : String},
     universityVerificationStatus : {type : String},
+    isVerified:{type:Boolean,default:false},
     createdDate: { type: Date, default: Date.now }
 });
 
