@@ -12,11 +12,8 @@ const schema = new Schema({
     birthDate:{type:String},
     hobbies : [{type: String}],
     highSchoolId : {type : String},
-    highSchoolVerificationStatus : {type : String},
     midSchoolId : {type : String},
-    midSchoolVerificationStatus : {type : String},
     universityId : {type : String},
-    universityVerificationStatus : {type : String},
     isVerified:{type:Boolean,default:false},
     createdDate: { type: Date, default: Date.now }
 });

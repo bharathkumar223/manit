@@ -5,7 +5,8 @@ const db = require('../_helpers/db');
 var springedge = require('springedge');
 const User = db.User;
 const UserVerification = db.UserVerification
-const globals = require('../globals')
+const globals = require('../globals');
+const { School } = require('../_helpers/db');
 
 module.exports = {
     requestOTP,
@@ -19,8 +20,56 @@ module.exports = {
     requestVerification,
     getVerificationRequest,
     respondVerificationRequest,
-    getUserInfo
+    getUserInfo,
+    getProfile
 };
+
+async function getProfile({userId}){
+    const user = await User.findOne({id:userId})
+    let schoolList = []
+    if(user){
+        if(user.highSchoolId){
+            const school = await School.findOne({_id:user.highSchoolId})
+            if(school){
+                schoolList.push({highSchool:{
+                    name:school.name,
+                    enrollment:school.enrollment,
+                    verificationStatus:school.verificationStatus
+                }})
+            }
+        }
+        if(user.midSchoolId){
+            const school = await School.findOne({_id:user.midSchoolId})
+            if(school){
+                schoolList.push({midSchool:{
+                    name:school.name,
+                    enrollment:school.enrollment,
+                    verificationStatus:school.verificationStatus
+                }})
+            }  
+        }
+        if(user.universityId){
+            const school = await School.findOne({_id:user.universityId})
+            if(school){
+                schoolList.push({university:{
+                    name:school.name,
+                    enrollment:school.enrollment,
+                    verificationStatus:school.verificationStatus
+                }})
+            }  
+        }
+    }else{
+        return {
+            status:"success",
+            message:"user not found for given id : "+userId
+        }
+    }
+    return {
+        status:"success",
+        school:schoolList,
+        hobby:user.hobbies
+    }
+}
 
 async function respondVerificationRequest({id, requestById, school, status}){
     const userVerification = await UserVerification.findOne({

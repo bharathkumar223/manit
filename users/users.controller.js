@@ -6,6 +6,7 @@ const authenticateJWT = require('../auth/auth')
 // routes
 
 router.get('/get/userInfo',authenticateJWT,getUserInfo);
+router.get('/get/profile',authenticateJWT,getProfile);
 router.post('/login', login);
 
 router.post('/signup/otp/request',  authenticateJWT, requestOTP);
@@ -29,6 +30,12 @@ module.exports = router;
 
 function login(req, res, next) {
     userService.login(req.body)
+        .then(response => res.json(response))
+        .catch(err => next(err));
+}
+
+function getProfile(req, res, next) {
+    userService.getProfile(req.body)
         .then(response => res.json(response))
         .catch(err => next(err));
 }
