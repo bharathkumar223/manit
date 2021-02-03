@@ -7,6 +7,8 @@ const schema = new Schema({
         data: {type:Buffer},
         contentType: {type:String }
     },
+    yearOfEntrance:{type:String},
+    department:{type:String},
     school: { type: String , required: true},
     status:{ type:String , default:'Pending'},
 });
@@ -17,7 +19,6 @@ schema.set('toJSON', {
     virtuals: true,
     versionKey: false,
     transform: function (doc, ret) {
-        delete ret._id;
     }
 });
 
