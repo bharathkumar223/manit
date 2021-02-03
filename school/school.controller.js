@@ -9,8 +9,8 @@ const authenticateJWT = require('../auth/auth')
 
 router.post('/search', authenticateJWT ,search);
 router.post('/save', authenticateJWT ,save);
-router.get('/getusers/school', authenticateJWT ,matchSameSchool);
-router.get('/getusers/univ', authenticateJWT ,matchSameUniv);
+router.post('/getusers/school', authenticateJWT ,matchSameSchool);
+router.post('/getusers/univ', authenticateJWT ,matchSameUniv);
 router.post('/upload', authenticateJWT ,upload.array('file', 12) , uploadImage);
 router.get('/getById/:id', authenticateJWT ,getById);
 router.put('/update', authenticateJWT ,updateSchool);
