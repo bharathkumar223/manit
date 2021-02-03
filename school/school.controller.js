@@ -7,17 +7,24 @@ const authenticateJWT = require('../auth/auth')
 
 // routes
 
-router.get('/search', authenticateJWT ,search);
+router.post('/search', authenticateJWT ,search);
 router.post('/save', authenticateJWT ,save);
 router.get('/getusers/school', authenticateJWT ,matchSameSchool);
 router.get('/getusers/univ', authenticateJWT ,matchSameUniv);
 router.post('/upload', authenticateJWT ,upload.array('file', 12) , uploadImage);
 router.get('/getById/:id', authenticateJWT ,getById);
+router.put('/update', authenticateJWT ,updateSchool);
 
 module.exports = router;
 
 function search(req, res, next) {
     schoolService.search({...req.query,...req.body})
+        .then(response => res.json(response))
+        .catch(err => next(err));
+}
+
+function updateSchool(req, res, next) {
+    schoolService.updateSchool(req.body)
         .then(response => res.json(response))
         .catch(err => next(err));
 }

@@ -74,8 +74,6 @@ async function getRequest(userId,school){
 
 async function userRequest({userId,requestedTo,school}){
 
-    let message
-
     for(let requestTo of requestedTo){ 
         const userVerification = new UserVerification({
             requestBy:userId,

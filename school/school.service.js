@@ -11,32 +11,30 @@ module.exports = {
     getById
 };
 
-var schoolSearch = [
-    { name: 'Choongang University', address: 'Dummy address for Choongang University'  },
-    { name: 'Korea University', address: 'Dummy address for Korea University'  },
-    { name: 'Seoul National University', address: 'Dummy address for Seoul National University'  },
-    { name: 'Yonsei University', address: 'Dummy address for Yonsei University'  },
-    { name: 'Sogang University', address: 'Dummy address for Sogang University'  },
-    { name: 'Naksang High School', address: 'Dummy address for Naksang High School'  },
-    { name: 'Bundang High School', address: 'Dummy address for Bundang High School'  },
-    { name: 'Dolma High School', address: 'Dummy address for Dolma High School'  },
-    { name: 'Emae High School', address: 'Dummy address for Emae High School'  },
-    { name: 'Sunae High School', address: 'Dummy address for Sunae High School'  },
-    { name: 'Seohyun Middle School', address: 'Dummy address for Seohyun Middle School'  },
-    { name: 'Cheongsol Middle School', address: 'Dummy address for Cheongsol Middle School'  },
-    { name: 'Yatab Middle School', address: 'Dummy address for Yatab Middle School'  },
-    { name: 'Bulgok Middle School', address: 'Dummy address for Bulgok Middle School'  },
-    { name: 'Beckhyun Middle School', address: 'Dummy address for Beckhyun Middle School'  }
-];
-
-function returnResponse(status,message){
-    return {
-        status:status,
-        message:message
+async function updateSchool({enrollment,schoolId,yearOfEntrance,department}){
+    const school = await School.findOne({_id:schoolId})
+    if(school){
+        Object.assign(school,{
+                      department:department!==undefined?department:school.department,
+                      yearOfEntrance:yearOfEntrance!==undefined?yearOfEntrance:school.yearOfEntrance,
+                      enrollment:enrollment!==undefined?enrollment:school.enrollment})
+        await school.save()
+        .then((school)=>{
+            return {
+                status:"success"
+            }
+        }).catch((error)=>{
+            return {
+                status:"fail",
+                message:error.message
+            }
+        });
     }
 }
 
 async function search({userId,searchString}){
+
+    console.log("searchString",searchString)
 
     const user = await User.findOne({ id:userId });
         if (user) {
