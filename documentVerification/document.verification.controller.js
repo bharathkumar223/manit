@@ -7,7 +7,7 @@ const multer = require('multer')
 var upload = multer({ dest: 'assets/Images' })
 
 router.post('/upload', authenticateJWT, upload.single('document') ,docUpload);
-router.patch('/action', authenticateJWT, docAction);
+router.put('/action', authenticateJWT, docAction);
 
 module.exports = router;
 

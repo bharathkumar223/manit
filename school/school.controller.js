@@ -17,7 +17,7 @@ router.get('/getById/:id', authenticateJWT ,getById);
 module.exports = router;
 
 function search(req, res, next) {
-    schoolService.search(req.body)
+    schoolService.search({...req.query,...req.body})
         .then(response => res.json(response))
         .catch(err => next(err));
 }
@@ -35,13 +35,13 @@ function save(req, res, next) {
 }
 
 function matchSameSchool(req, res, next) {
-    schoolService.matchSameSchool(req.body)
+    schoolService.matchSameSchool({...req.body,...req.query})
         .then(response => res.json(response))
         .catch(err => next(err));
 }
 
 function matchSameUniv(req, res, next) {
-    schoolService.matchSameUniv(req.body)
+    schoolService.matchSameUniv({...req.body,...req.query})
         .then(response => res.json(response))
         .catch(err => next(err));
 }

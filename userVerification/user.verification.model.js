@@ -8,7 +8,7 @@ const schema = new Schema({
     school:{ type: String , required:true,unique:false},
 });
 
-schema.index({ 'requestBy': 1, 'requestTo': 1 , 'school':1}, { unique: true })
+schema.index({ requestBy: 1, requestTo: 1 , school:1}, { unique: true })
 
 schema.set('toJSON', {
     virtuals: true,

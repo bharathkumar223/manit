@@ -4,7 +4,7 @@ const userService = require('./user.verification.service');
 const authenticateJWT = require('../auth/auth')
 
 // routes
-router.get('/request', authenticateJWT ,userRequest);
+router.post('/request', authenticateJWT ,userRequest);
 router.get('/requestInfo', authenticateJWT ,getRequestInfo);
 
 module.exports = router;

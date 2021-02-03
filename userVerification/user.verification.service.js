@@ -74,20 +74,27 @@ async function getRequest(userId,school){
 
 async function userRequest({userId,requestedTo,school}){
 
-   
-    console.log(requestedTo)
+    let message
+
     for(let requestTo of requestedTo){ 
         const userVerification = new UserVerification({
             requestBy:userId,
             requestTo:requestTo,
             school:school
         })
-        userVerification.save();
+        userVerification.save()
+        .then((user)=>{
+            console.log("successfully saved the request , "+user)
+        }).catch((error)=>{
+            return {
+                status:"fail",
+                message:error.message
+            }
+        });
     }
-    
     return {
             status:"success",
-            message:"saved the requests,wait for sometime for the response"
+            message:"saved the requests successfully"
         }
 }
 
