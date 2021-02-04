@@ -11,7 +11,7 @@ module.exports = router;
 
 function userRequest(req, res, next) {
     console.log(req.body)
-    userService.userRequest(req.body)
+    userService.userRequest(req)
         .then(response => res.json(response))
         .catch(err => next(err));
 }

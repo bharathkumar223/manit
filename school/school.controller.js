@@ -14,6 +14,7 @@ router.post('/getusers/univ', authenticateJWT ,matchSameUniv);
 router.post('/upload', authenticateJWT ,upload.array('file', 12) , uploadImage);
 router.get('/getById/:id', authenticateJWT ,getById);
 router.put('/update', authenticateJWT ,updateSchool);
+router.delete('/delete', authenticateJWT ,deleteSchool);
 
 module.exports = router;
 
@@ -25,6 +26,12 @@ function search(req, res, next) {
 
 function updateSchool(req, res, next) {
     schoolService.updateSchool(req.body)
+        .then(response => res.json(response))
+        .catch(err => next(err));
+}
+
+function deleteSchool(req, res, next) {
+    schoolService.deleteSchool(req.body)
         .then(response => res.json(response))
         .catch(err => next(err));
 }

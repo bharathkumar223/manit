@@ -1,7 +1,6 @@
 const { DocumentVerification } = require('../_helpers/db');
 const db = require('../_helpers/db');
-const Hobby = db.Hobby
-const User = db.User
+const schoolService = require('../school/school.service');
 const fs = require('fs')
 module.exports = {
     docUpload,
@@ -10,13 +9,13 @@ module.exports = {
 };
 
 async function docUpload(req){
-    const {school,yearOfEntrance,department,userId} = req.query
+    const {schoolName,yearOfEntrance,department,userId} = req.query
     console.log("req.body=>",req.body)
     const documentVerification = new DocumentVerification({
         id:userId,
         yearOfEntrance:yearOfEntrance,
         department:department,
-        school:school
+        school:schoolName
     });
     if(req.file.filename){
         var docData = fs.readFileSync('assets/Images/'+req.file.filename);
@@ -26,8 +25,6 @@ async function docUpload(req){
         }
         Object.assign(documentVerification,{document:document});
         documentVerification.save();
-        // console.log("req.body => ",req.body)
-        // console.log("req.file => ",req.file)
         return new Promise((resolve, reject) => {
             fs.unlink('assets/Images/'+req.file.filename, (err) => {
                 if (err){
@@ -38,10 +35,20 @@ async function docUpload(req){
                     })
                 } else{
                     console.log('assets/Images/'+req.file.filename+' was deleted');
-                    resolve({
-                        success:"success",
-                        message :"successfully uploaded document for verification"
-                    });
+                    schoolService.save(req.query)
+                        .then(response => {
+                            console.log("respone=>",response)
+                            resolve({
+                                status:response.status==="success"?"success":"fail",
+                                message:"successfully uploaded document for verification" + " and " + response.message,
+                            })
+                        })
+                        .catch(err => {
+                            resolve( {
+                                status:"fail",
+                                message:"successfully uploaded document for verification , "+err.message
+                            })
+                        });
                 }
             });
         })

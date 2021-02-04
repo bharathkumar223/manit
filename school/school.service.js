@@ -1,3 +1,4 @@
+const { reject } = require('lodash');
 const { School} = require('../_helpers/db');
 const db = require('../_helpers/db');
 const SchoolList = db.SchoolList
@@ -8,28 +9,85 @@ module.exports = {
     matchSameSchool,
     matchSameUniv,
     uploadImage,
-    getById
+    getById,
+    updateSchool,
+    deleteSchool
 };
+
+async function deleteSchool({userId,schoolId}){
+    return new Promise((resolve) => {
+        School.deleteOne({_id:schoolId},function(err,doc){
+            if(err){
+                resolve({
+                    status:"fail",
+                    message:"unable to remove the school sticker ," + err.message
+                })
+            }else{
+                let unset
+                if(doc.schoolType === 'mid'){
+                    unset = "midSchoolId"
+                }else if(doc.schoolType === 'high'){
+                    unset = "highSchoolId"
+                }else{
+                    unset = "universityId"
+                }
+                User.updateOne({id:userId},{$unset:{unset:1}},{multi:false},function(err){
+                    if(err){
+                        resolve({
+                            status:"fail",
+                            message:"successfully removed the school sticker"
+                        })
+                    }
+                })
+            }
+        })
+    })
+}
 
 async function updateSchool({enrollment,schoolId,yearOfEntrance,department}){
     const school = await School.findOne({_id:schoolId})
-    if(school){
-        Object.assign(school,{
-                      department:department!==undefined?department:school.department,
-                      yearOfEntrance:yearOfEntrance!==undefined?yearOfEntrance:school.yearOfEntrance,
-                      enrollment:enrollment!==undefined?enrollment:school.enrollment})
-        await school.save()
-        .then((school)=>{
-            return {
-                status:"success"
+    return new Promise((resolve) => {
+    
+        let update = {}
+        if(department){
+            update = {
+                ...update,
+                department:department
             }
-        }).catch((error)=>{
-            return {
+        }
+        if(enrollment){
+            update = {
+                ...update,
+                enrollment:enrollment
+            }
+        }
+        if(yearOfEntrance){
+            update = {
+                ...update,
+                yearOfEntrance:yearOfEntrance
+            }
+        }
+        if(school){
+            Object.assign(school,update)
+            school.save()
+            .then((school)=>{
+                resolve( {
+                    status:"success",
+                    message:"successfully updated the school info"
+                })
+            }).catch((error)=>{
+                resolve( {
+                    status:"fail",
+                    message:error.message
+                })
+            });
+        }else{
+            resolve( {
                 status:"fail",
-                message:error.message
-            }
-        });
-    }
+                message:"Unable to find school with the id , "+schoolId
+            })
+        }
+})
 }
 
 async function search({userId,searchString}){
@@ -103,12 +161,13 @@ async function save(schoolParam){
 }
 
 async function savehighSchoolInfo({userId, schoolName,enrollment, yearOfEntrance , schoolType}){
+    console.log(userId, schoolName,enrollment,yearOfEntrance,schoolType)
     const user = await User.findOne({ id : userId});
     if (user) {
         if(user.highSchoolId){
             return { 
                 status:"fail",
-                message:"High School Info has already been saved for the user , with verification status :  " + user.highSchoolVerificationStatus
+                message:"High School Info has already been saved for the user   "
             }
         }else{
             const school = new School({
@@ -120,7 +179,7 @@ async function savehighSchoolInfo({userId, schoolName,enrollment, yearOfEntrance
             });
             if (school) {
                 await school.save();
-                Object.assign(user,{highSchoolId:school._id,highSchoolVerificationStatus:"Pending"});
+                Object.assign(user,{highSchoolId:school._id});
                 await user.save();
                 return{
                     status:"success",
@@ -148,7 +207,7 @@ async function savemidSchoolInfo({userId, schoolName,enrollment, yearOfEntrance 
         if(user.midSchoolId){
             return { 
                 status:"fail",
-                message:"Mid School Info has already been saved for the user , with verification status :  " + user.midSchoolVerificationStatus
+                message:"Mid School Info has already been saved for the user "
             }
         }else{
             const school = new School({
@@ -160,7 +219,7 @@ async function savemidSchoolInfo({userId, schoolName,enrollment, yearOfEntrance 
             });
             if (school) {
                 await school.save();
-                Object.assign(user,{midSchoolId:school._id,midSchoolVerificationStatus:"Pending"});
+                Object.assign(user,{midSchoolId:school._id});
                 await user.save();
                 return{
                     status:"success",
@@ -183,12 +242,13 @@ async function savemidSchoolInfo({userId, schoolName,enrollment, yearOfEntrance 
 
 async function saveUnivInfo({userId, schoolName,enrollment, yearOfEntrance, department , schoolType}){
 
+    console.log(userId, schoolName,enrollment,yearOfEntrance,schoolType)
     const user = await User.findOne({ id :userId});
     if (user) {
         if(user.universityId){
             return { 
                 status:"fail",
-                message:"University Info has already been saved for the user , with verification status :  " + user.universityVerificationStatus
+                message:"University Info has already been saved for the user " 
             }
         }else{
             const school = new School({
@@ -200,13 +260,46 @@ async function saveUnivInfo({userId, schoolName,enrollment, yearOfEntrance, depa
                 department:department
             });
             if (school) {
-                await school.save();
-                Object.assign(user,{universityId:school._id,universityVerificationStatus:"Pending"});
-                await user.save();
-                return { 
-                    status:"success",
-                    message:"successfully saved the school Info"
-                }
+                return new Promise((resolve, reject) => {
+                 school.save()
+                .then((schoolDoc)=>{
+                    console.log("newly created school doc=>",schoolDoc)
+                    Object.assign(user,{universityId:schoolDoc._id});
+                     user.save()
+                    .then((user)=>{
+                        resolve( { 
+                            status:"success",
+                            message:"successfully saved the school Info"
+                        })
+                    })
+                    .catch(error=>{
+                        reject( { 
+                            status:"fail",
+                            message:"Error while saving the school Info : " + error.message
+                        })
+                    })
+                })
+                    // User.findOneAndUpdate({id:userId},{universityId:schoolDoc._id},function(err) {
+                    //     if (err) {
+                    //         // await School.deleteOne({_id:schoolDoc._id})
+                    //         return { 
+                    //             status:"fail",
+                    //             message:"Error while saving the school Info : " + err.message
+                    //         }
+                    //     }
+                    //     return { 
+                    //         status:"success",
+                    //         message:"successfully saved the school Info"
+                    //     }
+                    // })
+                })
+                .catch(error=>{
+                    reject( { 
+                        status:"fail",
+                        message:"Error while saving the school Info : " + error.message
+                    })
+                })
+                
             }else{
                 return { 
                     status:"fail",
@@ -222,7 +315,7 @@ async function saveUnivInfo({userId, schoolName,enrollment, yearOfEntrance, depa
     }
 }
 
-async function matchSameSchool({schoolType,yearOfEntrance,schoolName}){
+async function matchSameSchool({userId,schoolType,yearOfEntrance,schoolName}){
 
     var searchCondition
 
@@ -243,7 +336,8 @@ async function matchSameSchool({schoolType,yearOfEntrance,schoolName}){
         School.find({ $and: [
             {name: schoolName},
             searchCondition ,
-            {yearOfEntrance: yearOfEntrance}         
+            {yearOfEntrance: yearOfEntrance},
+            {userId:{$ne:userId}}         
         ]},
                  function(err, docs) {
                     console.log("school=>",docs);
@@ -281,14 +375,15 @@ async function matchSameSchool({schoolType,yearOfEntrance,schoolName}){
       })
 }
 
-async function matchSameUniv({yearOfEntrance,schoolName,department}){
+async function matchSameUniv({userId,yearOfEntrance,schoolName,department}){
 
     return new Promise((resolve, reject) => {
 
         School.find({name: schoolName ,
                      schoolType:"university",
                      department:department,
-                     yearOfEntrance:yearOfEntrance
+                     yearOfEntrance:yearOfEntrance,
+                     userId:{$ne:userId}
                     }, function(err, docs) {
             console.log("school=>",docs);
             if(err){
