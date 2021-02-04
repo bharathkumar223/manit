@@ -14,33 +14,44 @@ module.exports = {
     deleteSchool
 };
 
-async function deleteSchool({userId,schoolId}){
+async function deleteSchool({userId,schoolId,schoolType}){
     return new Promise((resolve) => {
-        School.deleteOne({_id:schoolId},function(err,doc){
+        let unset
+        if(schoolType === 'mid'){
+            unset = {$unset:{midSchoolId:1}}
+        }else if(schoolType === 'high'){
+            unset = {$unset:{highSchoolId:1}}
+        }else if(schoolType === 'university'){
+            unset = {$unset:{universityId:1}}
+        }else{
+            resolve({
+                status:"fail",
+                message:"provided school type is not valid : " + schoolType
+            })
+        }
+        User.updateOne({id:userId},unset,function(err){
             if(err){
                 resolve({
                     status:"fail",
-                    message:"unable to remove the school sticker ," + err.message
-                })
-            }else{
-                let unset
-                if(doc.schoolType === 'mid'){
-                    unset = "midSchoolId"
-                }else if(doc.schoolType === 'high'){
-                    unset = "highSchoolId"
-                }else{
-                    unset = "universityId"
-                }
-                User.updateOne({id:userId},{$unset:{unset:1}},{multi:false},function(err){
-                    if(err){
-                        resolve({
-                            status:"fail",
-                            message:"successfully removed the school sticker"
-                        })
-                    }
+                    message:"Unable to remove the school sticker : "+err.message
                 })
             }
+            School.deleteOne({_id:schoolId},function(err,doc){
+                if(err){
+                    resolve({
+                        status:"fail",
+                        message:"unable to remove the school sticker ," + err.message
+                    })
+                }else{
+                    resolve({
+                        status:"success",
+                        message:"successfully removed the school sticker"
+                    })  
+                    
+                }
+            })
         })
+        
     })
 }
 

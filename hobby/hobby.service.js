@@ -3,8 +3,41 @@ const Hobby = db.Hobby
 const User = db.User
 module.exports = {
     getHobbies,
-    saveHobbies
+    saveHobbies,
+    deleteHobbies
 };
+
+async function deleteHobbies({userId,hobby}){
+    const user = await User.findOne({id:userId})
+    let hobbies = user.hobbies
+    const index = hobbies.indexOf(hobby);
+    if (index > -1) {
+        hobbies.splice(index, 1);
+    }
+    if(user){
+        return new Promise((resolve) => {
+            Object.assign(user,{hobbies:hobbies})
+             user.save()
+            .then(response=>{
+                resolve({
+                    status:"success",
+                    message:"successfully removed the hobby : " + hobby
+                })
+            })
+            .catch(err=>{
+                resolve({
+                    status:"fail",
+                    message:"Unable to remove the hobby : " + err.message
+                })
+            })
+        })
+    }else{
+        return{
+            status:"fail",
+            message:"No user found for the given id : " + userId
+        }
+    }
+}
 
 async function getHobbies(){
 
