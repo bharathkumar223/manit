@@ -11,8 +11,48 @@ module.exports = {
     uploadImage,
     getById,
     updateSchool,
-    deleteSchool
+    deleteSchool,
+    updateSchoolStatus
 };
+
+async function updateSchoolStatus({schoolName,userId}){
+    const school =  await  School.findOne({name:schoolName,userId:userId})
+    return new Promise((resolve) => {
+    
+                if(school){
+                    console.log("inside school")
+                    if(school.verificationStatus === "Staged"){
+                        Object.assign(school,{verificationStatus:"Pending"})
+                    }else{
+                        Object.assign(school,{verificationStatus:"Staged"})
+                    }
+                    school.save()
+                        .then((school)=>{
+                            resolve({
+                                    status:"success",
+                                    message:" changed school status to " + school.verificationStatus  
+                                
+                            })
+                        }).catch((error)=>{
+                            resolve({
+                                    status:"fail",
+                                    message:" error while updating school status to "
+                                     + school.verificationStatus  + " : " + error.message
+                                
+                            })
+                        });
+                }else{
+                    console.log("else school")
+                    resolve({
+                            status:"fail",
+                            message:" error while updating school status to  : " 
+                             + "unable to find school for given user and school"
+                        
+                    })
+                
+                }
+            })
+}
 
 async function deleteSchool({userId,schoolId,schoolType}){
     return new Promise((resolve) => {

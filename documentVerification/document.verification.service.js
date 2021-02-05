@@ -1,4 +1,4 @@
-const { DocumentVerification } = require('../_helpers/db');
+const { DocumentVerification, School } = require('../_helpers/db');
 const db = require('../_helpers/db');
 const schoolService = require('../school/school.service');
 const fs = require('fs')
@@ -25,32 +25,30 @@ async function docUpload(req){
         }
         Object.assign(documentVerification,{document:document});
         documentVerification.save();
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
+            let message = ""
             fs.unlink('assets/Images/'+req.file.filename, (err) => {
                 if (err){
-                    // throw err;
-                    reject({
-                        status:"fail",
-                        message :"uploaded the file successfully,but error while deleting redundant file," + err
-                    })
+                    message+= "uploaded the file successfully,but error while deleting redundant file," + err + ","
                 } else{
                     console.log('assets/Images/'+req.file.filename+' was deleted');
-                    schoolService.save(req.query)
-                        .then(response => {
-                            console.log("respone=>",response)
-                            resolve({
-                                status:response.status==="success"?"success":"fail",
-                                message:"successfully uploaded document for verification" + " and " + response.message,
-                            })
-                        })
-                        .catch(err => {
-                            resolve( {
-                                status:"fail",
-                                message:"successfully uploaded document for verification , "+err.message
-                            })
-                        });
+                    message+="uploaded the file successfully,"
                 }
             });
+
+            schoolService.updateSchoolStatus({schoolName:schoolName,userId:userId})
+                .then(response => {
+                    resolve({
+                        status:response.status==="success"?"success":"fail",
+                        message:message + " and " + response.message,
+                    })
+                })
+                .catch(err => {
+                    resolve( {
+                        status:"fail",
+                        message:message+" and Error while updating school status , "+err.message
+                    })
+                });
         })
     }else{
         return{

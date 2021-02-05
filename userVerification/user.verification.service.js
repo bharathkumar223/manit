@@ -1,6 +1,7 @@
 const db = require('../_helpers/db');
 const UserVerification = db.UserVerification
 const DocumentVerification = db.DocumentVerification
+const School = db.School
 const schoolService = require('../school/school.service');
 module.exports = {
     userRequest,
@@ -76,61 +77,70 @@ async function getRequest(userId,school){
 async function userRequest(req){
     
     const {userId,requestedTo,schoolName} = req.body
-    return new Promise((resolve) => {
-        for(let requestTo of requestedTo){ 
-            const userVerification = new UserVerification({
-                requestBy:userId,
-                requestTo:requestTo,
-                school:schoolName
-            })
-            userVerification.save()
-            .then((user)=>{
-                console.log("successfully saved the request , "+user)
-            }).catch((error)=>{
-                resolve ({
-                    status:"fail",
-                    message:error.message
+    
+        let message = {}
+        return new Promise((resolve) => {
+            for(let requestTo of requestedTo){ 
+                const userVerification = new UserVerification({
+                    requestBy:userId,
+                    requestTo:requestTo,
+                    school:schoolName
                 })
+                userVerification.save()
+                .then((user)=>{
+                    schoolService.updateSchoolStatus({schoolName:schoolName,userId:userId})
+                        .then(response => {
+                            console.log("respone=>",response)
+                            resolve({
+                                status:response.status==="success"?"success":"fail",
+                                message:"successfully requested the user" + " and " + response.message,
+                            })
+                        })
+                        .catch(err => {
+                            resolve( {
+                                status:"fail",
+                                message:"successfully requested the user , "+err.message
+                            })
+                        });
+                }).catch((error)=>{
+                    resolve({
+                            status:"fail",
+                            message:"Error requesting the user " + requestTo + " : " + error.message
+                        })
+                });   
             }
-            );   
-        }
-        schoolService.save(req.body)
-            .then(response => {
-                console.log("respone=>",response)
-                resolve({
-                    status:response.status==="success"?"success":"fail",
-                    message:"saved the requests successfully" + " and " + response.message,
-                })
-            })
-            .catch(err => {
-                resolve( {
-                    status:"fail",
-                    message:"saved the requests successfully , "+err.message
-                })
-            });
         })
-    // return new Promise((resolve, reject) => {
-    // schoolService.save(req.body)
-    //     .then(response => {
-    //         resolve({
-    //             ...returnResponse,
-    //             schoolSaveStatus:response.status,
-    //             schoolSaveMessage:response.message
-    //         })
-    //     })
-    //     .catch(err => {
-    //         reject( {
-    //             ...returnResponse,
-    //             schoolSaveStatus:"fail",
-    //             schoolSaveMessage:err.message
-    //         })
-    //     });
-    // })
+    
+        // schoolService.save(req.body)
+        //     .then(response => {
+        //         console.log("respone=>",response)
+        //         resolve({
+        //             status:response.status==="success"?"success":"fail",
+        //             message:"saved the requests successfully" + " and " + response.message,
+        //         })
+        //     })
+        //     .catch(err => {
+        //         resolve( {
+        //             status:"fail",
+        //             message:"saved the requests successfully , "+err.message
+        //         })
+        //     });
+        // })
+        // return new Promise((resolve, reject) => {
+        // schoolService.save(req.body)
+        //     .then(response => {
+        //         resolve({
+        //             ...returnResponse,
+        //             schoolSaveStatus:response.status,
+        //             schoolSaveMessage:response.message
+        //         })
+        //     })
+        //     .catch(err => {
+        //         reject( {
+        //             ...returnResponse,
+        //             schoolSaveStatus:"fail",
+        //             schoolSaveMessage:err.message
+        //         })
+        //     });
+        // })
 }
-
-
-
-
-
-
-
