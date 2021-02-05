@@ -76,7 +76,7 @@ async function getRequest(userId,school){
 async function userRequest(req){
     
     const {userId,requestedTo,schoolName} = req.body
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         for(let requestTo of requestedTo){ 
             const userVerification = new UserVerification({
                 requestBy:userId,
@@ -92,8 +92,7 @@ async function userRequest(req){
                     message:error.message
                 })
             }
-            );
-            
+            );   
         }
         schoolService.save(req.body)
             .then(response => {

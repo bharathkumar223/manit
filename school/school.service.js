@@ -79,19 +79,26 @@ async function updateSchool({enrollment,schoolId,yearOfEntrance,department}){
             }
         }
         if(school){
-            Object.assign(school,update)
-            school.save()
-            .then((school)=>{
-                resolve( {
-                    status:"success",
-                    message:"successfully updated the school info"
-                })
-            }).catch((error)=>{
+            if(school.verificationStatus !== "Pending"){
+                Object.assign(school,update)
+                school.save()
+                .then((school)=>{
+                    resolve( {
+                        status:"success",
+                        message:"successfully updated the school info"
+                    })
+                }).catch((error)=>{
+                    resolve( {
+                        status:"fail",
+                        message:error.message
+                    })
+                });
+            }else{
                 resolve( {
                     status:"fail",
-                    message:error.message
+                    message:"Updating school info is not allowed in Pending stage"
                 })
-            });
+            }
         }else{
             resolve( {
                 status:"fail",

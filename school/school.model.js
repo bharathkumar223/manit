@@ -8,7 +8,7 @@ const schema = new Schema({
     enrollment: { type: String },
     department  : { type: String },
     yearOfEntrance  : { type: String },
-    verificationStatus:{type:String,default:"Pending"},
+    verificationStatus:{type:String,default:"Staged"},
     createdDate: { type: Date, default: Date.now },
 });
 
