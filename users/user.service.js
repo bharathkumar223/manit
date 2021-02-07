@@ -223,7 +223,7 @@ async function sendOTP(user){
 
 async function requestOTP(userParam) {
     // validate
-    const user = await User.findOne({ id: userParam.id })
+    const user = await User.findOne({ id: userParam.userId })
     const koreanPhoneRegex = new RegExp(globals.koreanMobileRegex);
     if(koreanPhoneRegex.test(userParam.mobile)){
         if (user) {
@@ -248,14 +248,14 @@ async function requestOTP(userParam) {
 
 async function resendOTP(userParam) {
     
-    const user  =  await User.findOne({ id: userParam.id});
+    const user  =  await User.findOne({ id: userParam.userId});
     
     if (user) {
         return sendOTP(user);
     }else{
         return {
             status:"fail",
-            message:"user with given id not found , id : " + userParam.id
+            message:"user with given id not found , id : " + userParam.userId
         }
         // throw "user with given id not found , id : " + userParam.userId
     }
@@ -264,7 +264,7 @@ async function resendOTP(userParam) {
 
 async function validateOTP(userParam) {
 
-    const user = await User.findOne({ id : userParam.id });
+    const user = await User.findOne({ id : userParam.userId });
     if (user) {
         if (user.otp === userParam.otp){
             Object.assign(user,{isVerified:true})
@@ -283,7 +283,7 @@ async function validateOTP(userParam) {
     }else{
         return {
             status : "fail",
-            message:"user with given id " + userParam.id + " not found"
+            message:"user with given id " + userParam.userId + " not found"
         }
         // throw 'user with given id "' + userParam.userId + '" not found';
     }
@@ -322,9 +322,11 @@ async function saveInfo({id , password}){
         var hash = bcrypt.hashSync(password, 10);
         const newUser = new User({id : id, hash:hash});
         await newUser.save();
+        const token = jwt.sign({ sub: id }, config.secret, { expiresIn: '7d' });
         return {
             status : "success",
             message : "New password created successfully",
+            token:token
         };
     }
 }
@@ -348,24 +350,22 @@ async function isIdAvailable({id}){
 
 async function savePersonalInfo(userParam){
 
-    const user = await User.findOne({id : userParam.id});
+    const user = await User.findOne({id : userParam.userId});
 
     if(user){
         Object.assign(user,{name:userParam.name,
                             gender:userParam.gender,
                             birthDate:userParam.birthDate});
         await user.save();
-        const token = jwt.sign({ sub: userParam.id }, config.secret, { expiresIn: '7d' });
         return {
             status:"success",
             message:"personal info saved successfully",
-            token:token
         }
     }
     else{
         return {
             status:"fail",
-            message:"user with the id " + userParam.id + " doest not exist"
+            message:"user with the id " + userParam.userId + " doest not exist"
         }
     }
 
