@@ -15,6 +15,8 @@ const schema = new Schema({
     midSchoolId : {type : String},
     universityId : {type : String},
     isVerified:{type:Boolean,default:false},
+    isNewUser:{type:Boolean,default:true},
+    isPersonalInfo:{type:Boolean,default:false},
     createdDate: { type: Date, default: Date.now }
 });
 

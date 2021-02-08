@@ -19,6 +19,8 @@ router.post('/signup/id/validation', isIdAvailable);
 router.post('/request/verification', authenticateJWT,requestVerification);
 router.post('/get/verification/request',authenticateJWT, getVerificationRequest);
 router.post('/respond/verification/request',authenticateJWT, respondVerificationRequest);
+router.get('/get/navigation',authenticateJWT, getNavigation)
+router.post('/edit/isNewUser',authenticateJWT, editIsNewUser)
 // router.get('/current', getCurrent);
 // router.get('/:id', getById);
 // router.put('/:id', update);
@@ -30,6 +32,17 @@ module.exports = router;
 
 function login(req, res, next) {
     userService.login(req.body)
+        .then(response => res.json(response))
+        .catch(err => next(err));
+}
+function editIsNewUser(req, res, next) {
+    userService.editIsNewUser(req.body)
+        .then(response => res.json(response))
+        .catch(err => next(err));
+}
+
+function getNavigation(req, res, next) {
+    userService.getNavigation(req.body)
         .then(response => res.json(response))
         .catch(err => next(err));
 }

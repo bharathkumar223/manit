@@ -21,7 +21,9 @@ module.exports = {
     getVerificationRequest,
     respondVerificationRequest,
     getUserInfo,
-    getProfile
+    getProfile,
+    getNavigation,
+    editIsNewUser
 };
 
 async function getProfile({userId}){
@@ -348,6 +350,55 @@ async function isIdAvailable({id}){
     }
 }
 
+async function getNavigation({userId}){
+    
+    const user = await User.findOne({id : userId});
+
+    if(user){
+        return {
+            status:"success",
+            isVerified:user.isVerified,
+            isNewUser:user.isNewUser,
+            isPersonalInfo:user.isPersonalInfo,
+        }
+    }
+    else{
+        return {
+            status:"fail",
+            message:"user with the id " + userId + " doest not exist"
+        }
+    }
+}
+
+async function editIsNewUser({userId,isNewUser}){
+    const user = await User.findOne({id : userId});
+    return new Promise((resolve) => {
+        if(user){
+            Object.assign(user,{isNewUser:isNewUser})
+             user.save()
+            .then(user=>{
+                resolve({
+                    status:"success",
+                    message:"successfully modified isNewUser to : " + user.isNewUser
+                })
+            })
+            .catch(err=>{
+                resolve( {
+                    status:"fail",
+                    message:"Error while updating isNewUser : " + err.message
+                })
+            })
+            
+        }
+        else{
+            resolve( {
+                status:"fail",
+                message:"user with the id " + userId + " doest not exist"
+            })
+        }
+    })
+}
+
 async function savePersonalInfo(userParam){
 
     const user = await User.findOne({id : userParam.userId});
@@ -355,7 +406,9 @@ async function savePersonalInfo(userParam){
     if(user){
         Object.assign(user,{name:userParam.name,
                             gender:userParam.gender,
-                            birthDate:userParam.birthDate});
+                            birthDate:userParam.birthDate,
+                            isPersonalInfo:true
+                        });
         await user.save();
         return {
             status:"success",
