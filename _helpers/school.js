@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const mongoose = require('mongoose');
 mongoose.set('debug', true);
-const pathToImage = require('../Images/Image.utils')
+const pathToImage = require('../src/Images/Image.utils')
 
 module.exports = {
     initialLoad : function ()  {
@@ -14,11 +14,13 @@ module.exports = {
         const data = require('../assets/schools');
         for(let school of data.documents) {
           if(school.logo === "ChoongangUniversity" || school.logo === "ChoongangDajinHighSchool"){
+            // school.id = school.logo
             var binImage = pathToImage(school.logo);
             school.logo = {
               data:binImage,
               contentType:'image/png'
             }
+            
           }
         }
         console.log("data=> ",data.documents);

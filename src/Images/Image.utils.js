@@ -1,4 +1,4 @@
-const { Image} = require('../_helpers/db');
+const { Image} = require('../../_helpers/db');
 const fs = require('fs')
 
 function pathToImage(name){

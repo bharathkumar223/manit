@@ -1,5 +1,5 @@
-const { DocumentVerification, School } = require('../_helpers/db');
-const db = require('../_helpers/db');
+const { DocumentVerification, School } = require('../../_helpers/db');
+const db = require('../../_helpers/db');
 const schoolService = require('../school/school.service');
 const fs = require('fs')
 module.exports = {

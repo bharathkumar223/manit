@@ -1,4 +1,4 @@
-const db = require('../_helpers/db');
+const db = require('../../_helpers/db');
 const Hobby = db.Hobby
 const User = db.User
 module.exports = {

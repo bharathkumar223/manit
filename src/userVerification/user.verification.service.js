@@ -1,4 +1,4 @@
-const db = require('../_helpers/db');
+const db = require('../../_helpers/db');
 const UserVerification = db.UserVerification
 const DocumentVerification = db.DocumentVerification
 const School = db.School

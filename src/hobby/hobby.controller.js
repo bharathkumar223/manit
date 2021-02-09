@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const hobbyService = require('./hobby.service');
-const authenticateJWT = require('../auth/auth')
+const authenticateJWT = require('../../auth/auth')
 
 // routes
 router.get('/get', authenticateJWT ,getHobbies);

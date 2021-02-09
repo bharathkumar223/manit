@@ -3,7 +3,7 @@ const router = express.Router();
 const schoolService = require('./school.service');
 var multer  = require('multer')
 var upload = multer({ dest: __dirname +'uploads/' });
-const authenticateJWT = require('../auth/auth')
+const authenticateJWT = require('../../auth/auth')
 
 // routes
 

@@ -1,6 +1,6 @@
 const { reject } = require('lodash');
-const { School} = require('../_helpers/db');
-const db = require('../_helpers/db');
+const { School} = require('../../_helpers/db');
+const db = require('../../_helpers/db');
 const SchoolList = db.SchoolList
 const User = db.User
 module.exports = {
@@ -14,6 +14,23 @@ module.exports = {
     deleteSchool,
     updateSchoolStatus
 };
+
+async function cancelSchool({schoolId}){
+    const school = await School.findOne({_id:schoolId})
+    if(school){
+        Object.assign(school,{verificationStatus:"Cancelled"})
+        await school.save(function(err){
+            if(err){
+                return{
+                    status:"success",
+                    message:"Error while cancelling the school sticker : " + err
+                }
+            }else{
+            }
+        })
+
+    }
+}
 
 async function updateSchoolStatus({schoolName,userId}){
     const school =  await  School.findOne({name:schoolName,userId:userId})
@@ -418,14 +435,15 @@ async function matchSameSchool({userId,schoolType,yearOfEntrance,schoolName}){
                                 })
                             }else{
                                 resolve({
+                                    status : "success",
                                     users:docs.map(function(doc){
                                         return {
-                                            status : "success",
                                             id:doc.id,
-                                            name:doc.name
-                                        };
-                                    })
+                                            name:doc.name,
+                                            schoolName:schoolName
+                                        } 
                                 })
+                            })
                             }
                         });
                     }
@@ -441,7 +459,7 @@ async function matchSameUniv({userId,yearOfEntrance,schoolName,department}){
                      schoolType:"university",
                      department:department,
                      yearOfEntrance:yearOfEntrance,
-                     userId:{$ne:userId}
+                    //  userId:{$ne:userId}
                     }, function(err, docs) {
             console.log("school=>",docs);
             if(err){
@@ -463,12 +481,13 @@ async function matchSameUniv({userId,yearOfEntrance,schoolName,department}){
                         })
                     }else{
                         resolve({
-                            users:docs.map(function(doc){
-                                return {
-                                    status : "success",
-                                    id:doc.id,
-                                    name:doc.name
-                                };
+                                status : "success",
+                                users:docs.map(function(doc){
+                                    return {
+                                        id:doc.id,
+                                        name:doc.name,
+                                        schoolName:schoolName
+                                    } 
                             })
                         })
 

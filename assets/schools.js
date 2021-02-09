@@ -6,7 +6,7 @@ exports.documents = [
     name:"Choongang University",
     address:"Dummy address for Choongang University",
     schoolType:"university",
-    logo : "ChoongangUniversity"
+    logo : "ChoongangUniversity",
   },
   {
     _id: mongoose.Types.ObjectId(),

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const userService = require('./user.verification.service');
-const authenticateJWT = require('../auth/auth')
+const authenticateJWT = require('../../auth/auth')
 
 // routes
 router.post('/request', authenticateJWT ,userRequest);

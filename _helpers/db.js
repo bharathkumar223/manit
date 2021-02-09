@@ -11,17 +11,24 @@ mongoose.connect(connectionURL, {
          mongoDefaultData.initialLoad()
      })
 
+// const connectionOptions = {
+//          useNewUrlParser: true,
+//          useCreateIndex: true,
+//          useFindAndModify: true,
+//          useUnifiedTopology: true
+//      }
+
 // mongoose.connect(process.env.MONGODB_URI || config.connectionString, connectionOptions,(err) => {
 //     mongoDefaultData.initialLoad()
 // });
 mongoose.Promise = global.Promise;
 
 module.exports = {
-    User: require('../users/user.model'),
-    School: require('../school/school.model'),
-    SchoolList: require('../school/schoolList.model'),
-    Image: require('../Images/Image.model'),
-    UserVerification: require('../userVerification/user.verification.model'),
-    DocumentVerification: require('../documentVerification/document.verification.model'),
-    Hobby: require('../hobby/hobby.model')
+    User: require('../src/users/user.model'),
+    School: require('../src/school/school.model'),
+    SchoolList: require('../src/school/schoolList.model'),
+    Image: require('../src/Images/Image.model'),
+    UserVerification: require('../src/userVerification/user.verification.model'),
+    DocumentVerification: require('../src/documentVerification/document.verification.model'),
+    Hobby: require('../src/hobby/hobby.model')
 };

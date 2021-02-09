@@ -16,11 +16,12 @@ app.use(cors());
 // api routes
 
 // app.use('/api/school', require('./schools/school.controller'));
-app.use('/api', require('./users/users.controller'));
-app.use('/school', require('./school/school.controller'));
-app.use('/hobby', require('./hobby/hobby.controller'));
-app.use('/document', require('./documentVerification/document.verification.controller'));
-app.use('/user', require('./userVerification/user.verification.controller'));
+app.use('/api', require('./src/users/users.controller'));
+app.use('/school', require('./src/school/school.controller'));
+app.use('/hobby', require('./src/hobby/hobby.controller'));
+app.use('/document', require('./src/documentVerification/document.verification.controller'));
+app.use('/user', require('./src/userVerification/user.verification.controller'));
+app.use('/profile', require('./src/profile/profile.controller'));
 
 // global error handler
 app.use(errorHandler);
