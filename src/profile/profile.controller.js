@@ -8,7 +8,7 @@ var upload = multer({ dest: 'assets/Images' })
 
 // routes
 // router.get('/get', authenticateJWT ,getProfile);
-router.post('/upload', authenticateJWT , upload.single('profilePic') ,uploadProfilePic);
+router.post('/upload' , upload.single('profilePic') ,authenticateJWT,uploadProfilePic);
 
 module.exports = router;
 

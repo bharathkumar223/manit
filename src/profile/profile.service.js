@@ -39,9 +39,14 @@ module.exports = {
 // }
 
 async function uploadProfilePic(req){
-    const {userId} = req.body
+    const userId = req.body.userId
     const user = await User.findOne({id:userId})
-    
+    if(!user){
+        return {
+            status:"fail",
+            message:"user with the given id not found : " + userId
+        }
+    }
     if(req.file.filename){
         var docData = fs.readFileSync('assets/Images/'+req.file.filename);
         var profilePic = {
@@ -49,10 +54,10 @@ async function uploadProfilePic(req){
             contentType:req.file.mimetype
         }
         Object.assign(user,{profilePic:profilePic});
-        let message
+        let message = ""
         fs.unlink('assets/Images/'+req.file.filename, (err) => {
             if (err){
-                message+= "error while deleting redundant file :" + err
+                message+= " , error while deleting redundant file :" + err
             } else{
                 console.log('assets/Images/'+req.file.filename+' was deleted');
             }
@@ -62,15 +67,13 @@ async function uploadProfilePic(req){
             .then(user=>{
                 resolve({
                     status:"success",
-                    message:"uploaded the profile pic successfully" +
-                            message?" and "+message:""
+                    message:"uploaded the profile pic successfully " + message
                 })
             })
             .catch(err=>{
                 resolve( {
                     status:"fail",
-                    message:"Error while updating profile pic : " + err.message  +
-                    message?" and "+message:""
+                    message:"Error while updating profile pic : " + err.message  + message
                 })
             })
         })

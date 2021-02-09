@@ -440,7 +440,8 @@ async function matchSameSchool({userId,schoolType,yearOfEntrance,schoolName}){
                                         return {
                                             id:doc.id,
                                             name:doc.name,
-                                            schoolName:schoolName
+                                            schoolName:schoolName,
+                                            photo:doc.profilePic
                                         } 
                                 })
                             })
@@ -459,7 +460,7 @@ async function matchSameUniv({userId,yearOfEntrance,schoolName,department}){
                      schoolType:"university",
                      department:department,
                      yearOfEntrance:yearOfEntrance,
-                    //  userId:{$ne:userId}
+                     userId:{$ne:userId}
                     }, function(err, docs) {
             console.log("school=>",docs);
             if(err){
@@ -486,7 +487,8 @@ async function matchSameUniv({userId,yearOfEntrance,schoolName,department}){
                                     return {
                                         id:doc.id,
                                         name:doc.name,
-                                        schoolName:schoolName
+                                        schoolName:schoolName,
+                                        photo:doc.profilePic
                                     } 
                             })
                         })
