@@ -30,5 +30,6 @@ module.exports = {
     Image: require('../src/Images/Image.model'),
     UserVerification: require('../src/userVerification/user.verification.model'),
     DocumentVerification: require('../src/documentVerification/document.verification.model'),
-    Hobby: require('../src/hobby/hobby.model')
+    Hobby: require('../src/hobby/hobby.model'),
+    Post:require('../src/profile/post.model')
 };
