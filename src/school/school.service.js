@@ -47,7 +47,7 @@ async function updateSchoolStatus({schoolName,userId}){
                         .then((school)=>{
                             resolve({
                                     status:"success",
-                                    message:" changed school status to " + school.verificationStatus  
+                                    message:" successfully changed school status to " + school.verificationStatus  
                                 
                             })
                         }).catch((error)=>{

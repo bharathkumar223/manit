@@ -10,7 +10,6 @@ module.exports = {
 
 async function docUpload(req){
     const {schoolName,yearOfEntrance,department,userId} = req.query
-    console.log("req.body=>",req.body)
     const documentVerification = new DocumentVerification({
         id:userId,
         yearOfEntrance:yearOfEntrance,
@@ -24,31 +23,39 @@ async function docUpload(req){
             contentType:req.file.mimetype
         }
         Object.assign(documentVerification,{document:document});
-        documentVerification.save();
         return new Promise((resolve) => {
             let message = ""
             fs.unlink('assets/Images/'+req.file.filename, (err) => {
                 if (err){
-                    message+= "uploaded the file successfully,but error while deleting redundant file," + err + ","
+                    message+= " and error while deleting redundant file," + err
                 } else{
                     console.log('assets/Images/'+req.file.filename+' was deleted');
-                    message+="uploaded the file successfully,"
                 }
             });
 
-            schoolService.updateSchoolStatus({schoolName:schoolName,userId:userId})
+            documentVerification.save()
+            .then((doc)=>{
+                schoolService.updateSchoolStatus({schoolName:schoolName,userId:userId})
                 .then(response => {
                     resolve({
                         status:response.status==="success"?"success":"fail",
-                        message:message + " and " + response.message,
+                        message:"uploaded the file successfully " + " and " 
+                                + response.message + message
                     })
                 })
                 .catch(err => {
                     resolve( {
                         status:"fail",
-                        message:message+" and Error while updating school status , "+err.message
+                        message:"uploaded the file successfully and Error while updating school status , "+err.message + message
                     })
                 });
+            })
+            .catch(err=>{
+                resolve( {
+                    status:"fail",
+                    message:" Error while saving the file uploaded , "+err.message + message
+                })
+            })
         })
     }else{
         return{
