@@ -10,7 +10,6 @@ module.exports = {
 
 async function docUpload(req){
     const {schoolName,yearOfEntrance,department,userId, enrollment,schoolType} = req.query
-    console.log("documentUpload=>req.body=>",req)
     const documentVerification = new DocumentVerification({
         id:userId,
         yearOfEntrance:yearOfEntrance,

@@ -10,7 +10,7 @@ var upload = multer({ dest: 'assets/Images' })
 router.get('/get', authenticateJWT ,getProfile);
 router.get('/post', upload.single('post'),authenticateJWT ,addPost);
 router.post('/upload' , upload.single('profilePic') ,authenticateJWT,uploadProfilePic);
-// router.add('/add', authenticateJWT ,getProfile);
+router.post('/comment', authenticateJWT ,comment);
 
 module.exports = router;
 
@@ -28,6 +28,12 @@ function getProfile(req, res, next) {
 
 function addPost(req, res, next) {
     profileService.addPost(req)
+        .then(response => res.json(response))
+        .catch(err => next(err));
+}
+
+function comment(req, res, next) {
+    profileService.comment(req)
         .then(response => res.json(response))
         .catch(err => next(err));
 }

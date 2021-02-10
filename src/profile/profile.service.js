@@ -1,13 +1,60 @@
-const db = require('../../_helpers/db');
-const Post = db.Post
-const User = db.User
 const fs = require('fs');
-const { School, SchoolList } = require('../../_helpers/db');
-const { post } = require('../hobby/hobby.controller');
+const { School, SchoolList, Comment ,Post, User} = require('../../_helpers/db');
 module.exports = {
     uploadProfilePic,
-    getProfile
+    getProfile,
+    addPost,
+    comment
 };
+
+async function comment({userId,comment,postId,commentId}){
+    if(commentId){
+        const comment = await Comment.findOne({_id:commentId})
+        if(comment){
+            var childComment = new Comment({
+                postId:comment.postId,
+                commentedUser:userId,
+                parentComment:comment._id
+            })
+            await childComment.save()
+            .then(comment=>{
+                return {
+                    status:"success",
+                    message:"successfully added the comment"
+                }
+            })
+            .catch(err=>{
+                return{
+                    status:"fail",
+                    message:"failed to add comment : " + err.message
+                }
+            })
+        }else{
+            return{
+                status:"fail",
+                message:"unable to find the comment with id : " + commentId
+            }
+        }
+    }else{
+        var comment = new Comment({
+            postId:postId,
+            commentedUser:userId
+        })
+        await comment.save()
+        .then(comment=>{
+            return {
+                status:"success",
+                message:"successfully added the comment"
+            }
+        })
+        .catch(err=>{
+            return{
+                status:"fail",
+                message:"failed to add comment : " + err.message
+            }
+        })
+    }
+}
 
 async function getProfile({userId}){
     const user = await User.findOne({id:userId})

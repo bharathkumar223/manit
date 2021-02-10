@@ -31,5 +31,6 @@ module.exports = {
     UserVerification: require('../src/userVerification/user.verification.model'),
     DocumentVerification: require('../src/documentVerification/document.verification.model'),
     Hobby: require('../src/hobby/hobby.model'),
-    Post:require('../src/profile/post.model')
+    Post:require('../src/profile/post.model'),
+    Comment:require('../src/profile/comment.model')
 };
