@@ -75,77 +75,60 @@ async function getRequest(userId,school){
 }
 
 async function userRequest(req){
-    const {userId,requestedTo,schoolName} = req.body
-        let response = []
-        for(const requestTo of requestedTo){
-            response = [
-                ...response,
-                await new Promise((resolve) =>{
-                    const userVerification = new UserVerification({
-                        requestBy:userId,
-                        requestTo:requestTo,
-                        school:schoolName
-                    })
-                    userVerification.save()
-                    .then(()=>{
-                        schoolService.updateSchoolStatus({schoolName:schoolName,userId:userId})
-                            .then(response => {
-                                resolve({
-                                    user:requestTo,
-                                    status:response.status==="success"?"success":"fail",
-                                    message:"successfully requested the user" + " and " + response.message,
-                                })
-                            })
-                            .catch(err => {
-                                resolve({
-                                    user:requestTo,
-                                    status:"fail",
-                                    message:"successfully requested the user , "+err.message
-                                })
-                            });
-                    }).catch((error)=>{
-                        resolve({
-                            user:requestTo,
-                            status:"fail",
-                            message:"Error requesting the user " + requestTo + " : " + error.message
-                        })
-                    }); 
+    
+    const {userId,requestedTo,schoolName,enrollment,
+            department,yearOfEntrance,schoolType} = req.body
+    
+    let userRequests = []
+    for(const requestTo of requestedTo){
+        userRequests = [
+            ...userRequests,
+            await new Promise((resolve) =>{
+                const userVerification = new UserVerification({
+                    requestBy:userId,
+                    requestTo:requestTo,
+                    school:schoolName
                 })
-            ] 
-        }
-        return{
-            data:response
-        }
-        // schoolService.save(req.body)
-        //     .then(response => {
-        //         console.log("respone=>",response)
-        //         resolve({
-        //             status:response.status==="success"?"success":"fail",
-        //             message:"saved the requests successfully" + " and " + response.message,
-        //         })
-        //     })
-        //     .catch(err => {
-        //         resolve( {
-        //             status:"fail",
-        //             message:"saved the requests successfully , "+err.message
-        //         })
-        //     });
-        // })
-        // return new Promise((resolve, reject) => {
-        // schoolService.save(req.body)
-        //     .then(response => {
-        //         resolve({
-        //             ...returnResponse,
-        //             schoolSaveStatus:response.status,
-        //             schoolSaveMessage:response.message
-        //         })
-        //     })
-        //     .catch(err => {
-        //         reject( {
-        //             ...returnResponse,
-        //             schoolSaveStatus:"fail",
-        //             schoolSaveMessage:err.message
-        //         })
-        //     });
-        // })
+                userVerification.save()
+                .then(()=>{
+                    resolve({
+                        user:requestTo,
+                        status:"success",
+                        message:"Successfully placed the request to the user : " + requestTo
+                    })
+                }).catch((error)=>{
+                    resolve({
+                        user:requestTo,
+                        status:"fail",
+                        message:"Error requesting the user " + requestTo + " : " + error.message
+                    })
+                }); 
+            
+            })
+        ]
+    }
+
+    const schoolSaveStatus = await new Promise((resolve) =>{
+        schoolService.save({schoolName:schoolName,
+            userId:userId,
+            enrollment:enrollment,
+            department:department,
+            yearOfEntrance:yearOfEntrance,
+            schoolType:schoolType})
+            .then(response => {
+                resolve({
+                    status:response.status,
+                    message: response.message,
+                })
+            })
+            .catch(err => {
+                resolve({
+                    status:"fail",
+                    message:"Error while saving school info , "+err.message
+                })
+            });
+        })
+
+    return{ userRequests:userRequests,
+            schoolSaveStatus:schoolSaveStatus}
 }

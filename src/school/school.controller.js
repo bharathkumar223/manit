@@ -15,11 +15,18 @@ router.post('/upload', authenticateJWT ,upload.array('file', 12) , uploadImage);
 router.get('/getById/:id', authenticateJWT ,getById);
 router.put('/update', authenticateJWT ,updateSchool);
 router.delete('/delete', authenticateJWT ,deleteSchool);
+router.put('/cancel', authenticateJWT ,cancelSchool);
 
 module.exports = router;
 
 function search(req, res, next) {
     schoolService.search({...req.query,...req.body})
+        .then(response => res.json(response))
+        .catch(err => next(err));
+}
+
+function cancelSchool(req, res, next) {
+    schoolService.cancelSchool({...req.query,...req.body})
         .then(response => res.json(response))
         .catch(err => next(err));
 }

@@ -9,14 +9,15 @@ module.exports = {
 };
 
 async function docUpload(req){
-    const {schoolName,yearOfEntrance,department,userId} = req.query
+    const {schoolName,yearOfEntrance,department,userId, enrollment,schoolType} = req.query
+    console.log("documentUpload=>req.body=>",req)
     const documentVerification = new DocumentVerification({
         id:userId,
         yearOfEntrance:yearOfEntrance,
         department:department,
         school:schoolName
     });
-    if(req.file.filename){
+    if(req.file && req.file.filename){
         var docData = fs.readFileSync('assets/Images/'+req.file.filename);
         var document = {
             data:docData,
@@ -35,7 +36,13 @@ async function docUpload(req){
 
             documentVerification.save()
             .then((doc)=>{
-                schoolService.updateSchoolStatus({schoolName:schoolName,userId:userId})
+                schoolService.save({schoolName:schoolName,
+                                    userId:userId,
+                                    enrollment:enrollment,
+                                    department:department,
+                                    yearOfEntrance:yearOfEntrance,
+                                    schoolType:schoolType
+                                    })
                 .then(response => {
                     resolve({
                         status:response.status==="success"?"success":"fail",
@@ -46,7 +53,7 @@ async function docUpload(req){
                 .catch(err => {
                     resolve( {
                         status:"fail",
-                        message:"uploaded the file successfully and Error while updating school status , "+err.message + message
+                        message:"uploaded the file successfully but Error while saving school info , "+err.message + message
                     })
                 });
             })

@@ -12,24 +12,40 @@ module.exports = {
     getById,
     updateSchool,
     deleteSchool,
-    updateSchoolStatus
+    updateSchoolStatus,
+    cancelSchool
 };
 
 async function cancelSchool({schoolId}){
     const school = await School.findOne({_id:schoolId})
-    if(school){
-        Object.assign(school,{verificationStatus:"Cancelled"})
-        await school.save(function(err){
-            if(err){
-                return{
-                    status:"success",
-                    message:"Error while cancelling the school sticker : " + err
-                }
-            }else{
-            }
-        })
-
+    if(!school){
+        return{
+            status:"fail",
+            message:"unable to find the school with the given school id : " + schoolId
+        }
     }
+    if(school.verificationStatus !== "Pending"){
+        return{
+            status:"fail",
+            message:"School sticker cannot be cancelled when the status is in : " + school.verificationStatus
+        }
+    }
+    Object.assign(school,{verificationStatus:"Cancelled"})
+    return new Promise((resolve)=>{
+        school.save()
+        .then(school=>{
+            resolve({
+                status:"success",
+                message:"successfully cancelled the school sticker : "
+            })
+        })
+        .catch(err=>{
+            resolve({
+                status:"fail",
+                message:"Error while cancelling the school sticker : " + err.message
+            })
+        })
+    })
 }
 
 async function updateSchoolStatus({schoolName,userId}){
