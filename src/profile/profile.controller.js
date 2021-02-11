@@ -8,9 +8,12 @@ var upload = multer({ dest: 'assets/Images' })
 
 // routes
 router.get('/get', authenticateJWT ,getProfile);
-router.get('/post', upload.single('post'),authenticateJWT ,addPost);
+router.post('/post', upload.single('post'),authenticateJWT ,addPost);
 router.post('/upload' , upload.single('profilePic') ,authenticateJWT,uploadProfilePic);
 router.post('/comment', authenticateJWT ,comment);
+router.post('/get/comment', authenticateJWT ,getComment);
+router.post('/like/post', authenticateJWT ,likePost);
+router.post('/dislike/post', authenticateJWT ,dislikePost);
 
 module.exports = router;
 
@@ -20,8 +23,26 @@ function uploadProfilePic(req, res, next) {
         .catch(err => next(err));
 }
 
+function likePost(req, res, next) {
+    profileService.likePost(req)
+        .then(response => res.json(response))
+        .catch(err => next(err));
+}
+
+function dislikePost(req, res, next) {
+    profileService.dislikePost(req)
+        .then(response => res.json(response))
+        .catch(err => next(err));
+}
+
+function getComment(req, res, next) {
+    profileService.getComment(req)
+        .then(response => res.json(response))
+        .catch(err => next(err));
+}
+
 function getProfile(req, res, next) {
-    profileService.getProfile(req)
+    profileService.getProfile(req.body)
         .then(response => res.json(response))
         .catch(err => next(err));
 }
