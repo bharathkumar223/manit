@@ -24,19 +24,19 @@ function uploadProfilePic(req, res, next) {
 }
 
 function likePost(req, res, next) {
-    profileService.likePost(req)
+    profileService.likePost(req.body)
         .then(response => res.json(response))
         .catch(err => next(err));
 }
 
 function dislikePost(req, res, next) {
-    profileService.dislikePost(req)
+    profileService.dislikePost(req.body)
         .then(response => res.json(response))
         .catch(err => next(err));
 }
 
 function getComment(req, res, next) {
-    profileService.getComment(req)
+    profileService.getComment(req.body)
         .then(response => res.json(response))
         .catch(err => next(err));
 }
@@ -54,7 +54,7 @@ function addPost(req, res, next) {
 }
 
 function comment(req, res, next) {
-    profileService.comment(req)
+    profileService.comment(req.body)
         .then(response => res.json(response))
         .catch(err => next(err));
 }

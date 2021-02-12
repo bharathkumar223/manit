@@ -11,8 +11,8 @@ module.exports = {
     dislikePost
 };
 
-async function dislikePost({postId}){
-    const post = Post.findOne({postId:postId})
+async function dislikePost({postId,userId}){
+    const post = await Post.findOne({_id:postId})
     if(!post){
         return {
             status:"fail",
@@ -25,31 +25,33 @@ async function dislikePost({postId}){
             message:"user need to have liked the post inorder to unlike the post"
         }
     }else{
-        let temp = post.likes;
-        let index = temp.index(userId)
-        if (index > -1) {
-            temp.splice(index, 1);
-        }
-        Object.assign(post,{likes:temp})
-        await post.save()
-        .then(post=>{
-            return{
-                status:"success",
-                message:"successfully disliked the post : " + postId + " by the user : " + userId
+        return new Promise((resolve)=>{
+            let temp = post.likes;
+            let index = temp.indexOf(userId)
+            if (index > -1) {
+                temp.splice(index, 1);
             }
-        })
-        .catch(err=>{
-            return{
-                status:"fail",
-                message:"error while saving the dislike : " + err.message
-            }
+            Object.assign(post,{likes:temp})
+            post.save()
+            .then(post=>{
+                resolve({
+                    status:"success",
+                    message:"successfully disliked the post : " + postId + " by the user : " + userId
+                })
+            })
+            .catch(err=>{
+                resolve({
+                    status:"fail",
+                    message:"error while saving the dislike : " + err.message
+                })
 
+            })
         })
     }
 }
 
 async function likePost({postId,userId}){
-    const post = Post.findOne({postId:postId})
+    const post = await Post.findOne({_id:postId})
     if(!post){
         return {
             status:"fail",
@@ -62,45 +64,52 @@ async function likePost({postId,userId}){
             message:"user already liked the post,cannot do more than once"
         }
     }else{
-        Object.assign(post,{likes:post.likes.push(userId)})
-        await post.save()
-        .then(post=>{
-            return{
-                status:"success",
-                message:"successfully liked the post : " + postId + " by the user : " + userId
-            }
-        })
-        .catch(err=>{
-            return{
-                status:"fail",
-                message:"error while saving the like : " + err.message
-            }
+        return new Promise((resolve)=>{
+            let temp = post.likes
+            temp.push(userId)
+            Object.assign(post,{likes:temp})
+             post.save()
+            .then(post=>{
+                resolve({
+                    status:"success",
+                    message:"successfully liked the post : " + postId + " by the user : " + userId
+                })
+            })
+            .catch(err=>{
+                resolve({
+                    status:"fail",
+                    message:"error while saving the like : " + err.message
+                })
 
+            })
         })
     }
 }
 
 async function comment({userId,comment,postId,commentId}){
     if(commentId){
-        const comment = await Comment.findOne({_id:commentId})
-        if(comment){
+        const coment = await Comment.findOne({_id:commentId})
+        if(coment){
             var childComment = new Comment({
-                postId:comment.postId,
+                postId:coment.postId,
                 commentedUser:userId,
-                parentComment:comment._id
+                parentComment:coment._id,
+                comment:comment
             })
-            await childComment.save()
-            .then(comment=>{
-                return {
-                    status:"success",
-                    message:"successfully added the comment"
-                }
-            })
-            .catch(err=>{
-                return{
-                    status:"fail",
-                    message:"failed to add comment : " + err.message
-                }
+            return new Promise((resolve)=>{
+                childComment.save()
+                .then(comment=>{
+                    resolve({
+                        status:"success",
+                        message:"successfully added the comment"
+                    })
+                })
+                .catch(err=>{
+                    resolve({
+                        status:"fail",
+                        message:"failed to add comment : " + err.message
+                    })
+                })
             })
         }else{
             return{
@@ -109,29 +118,32 @@ async function comment({userId,comment,postId,commentId}){
             }
         }
     }else{
-        var comment = new Comment({
+        var coment = new Comment({
             postId:postId,
-            commentedUser:userId
+            commentedUser:userId,
+            comment:comment
         })
-        await comment.save()
-        .then(comment=>{
-            return {
-                status:"success",
-                message:"successfully added the comment"
-            }
-        })
-        .catch(err=>{
-            return{
-                status:"fail",
-                message:"failed to add comment : " + err.message
-            }
+        return new Promise((resolve)=>{
+             coment.save()
+            .then(comment=>{
+                resolve({
+                    status:"success",
+                    message:"successfully added the comment"
+                })
+            })
+            .catch(err=>{
+                resolve({
+                    status:"fail",
+                    message:"failed to add comment : " + err.message
+                })
+            })
         })
     }
 }
 
 async function getComment({postId,userId}){
     let filter = {postId:postId,parentComment:{$exists: false}}
-    const post = await Post.findOne({postId:postId})
+    const post = await Post.findOne({_id:postId})
     if(post){
         if(!(post.userId === userId)){
             filter = {
@@ -145,7 +157,7 @@ async function getComment({postId,userId}){
             message:"unable to find post for the given postId : " + postId
         }
     }
-    return new Promise((resolve)=>{
+    const parentComments = await new Promise((resolve)=>{
         Comment.find(filter,function(err,docs){
             if(err){
                 resolve({
@@ -153,19 +165,6 @@ async function getComment({postId,userId}){
                     message:"Error while fetching comments : " + err.message
                 })
             }else{
-                // Map the docs into an array of just the ids of the user
-                docs.map(function(doc) { 
-                    Comment.find({parentComment: doc._id,postId:postId}, function(err, docs) {
-                        console.log("users=>",docs);
-                        if(err){
-                            doc.repliedComments = "Error fetching reply comments : "+docs
-                        }else{
-                            doc.repliedComments = docs
-                        }
-                        })
-                });
-                        
-                // Get the users whose ids are in the set
                 resolve({
                     status:"success",
                     comments:docs
@@ -174,6 +173,25 @@ async function getComment({postId,userId}){
             }
         })
     })
+
+    if(parentComments.status === "success"){
+        for(let comment of parentComments.comments){
+            const repliedComments = await new Promise((resolve)=>{
+                Comment.find({parentComment: comment._id,postId:postId}, function(err, docs) {
+                    if(err){
+                        resolve({
+                            repliedComments:"Error fetching reply comments : "+err.message})
+                    }else{
+                        resolve({repliedComments:docs})
+                    }
+                    
+                    })
+            });
+            comment["repliedComments"] = repliedComments.repliedComments
+        }
+    }
+    
+    return parentComments 
 }
 
 async function getProfile({userId}){
