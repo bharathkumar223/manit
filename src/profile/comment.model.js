@@ -16,8 +16,6 @@ const schema = new Schema({
     }]
 });
 
-// schema.index({ requestBy: 1, requestTo: 1 , school:1}, { unique: true })
-
 schema.set('toJSON', {
     virtuals: true,
     versionKey: false,

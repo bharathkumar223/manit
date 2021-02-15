@@ -1,11 +1,13 @@
 const fs = require('fs');
 const { School, SchoolList, Comment ,Post, User} = require('../../_helpers/db');
 const { post } = require('./profile.controller');
+// const Transaction = require("mongoose-transactions");
+// const transaction = new Transaction();
 module.exports = {
     uploadProfilePic,
     getProfile,
     addPost,
-    comment,
+    addComment,
     getComment,
     likePost,
     dislikePost
@@ -86,10 +88,35 @@ async function likePost({postId,userId}){
     }
 }
 
-async function comment({userId,comment,postId,commentId}){
+async function addComment({userId,comment,postId,commentId}){
+
     if(commentId){
         const coment = await Comment.findOne({_id:commentId})
         if(coment){
+            // try{
+            //     const id = transaction.insert("Comment", {
+            //         postId:coment.postId,
+            //         commentedUser:userId,
+            //         parentComment:coment._id,
+            //         comment:comment
+            //     });
+            //     transaction.update("Post", postId, {$inc:{commentCount:1}});
+            //     const final = await transaction.run();
+            //     console.log("final=>",final)
+            //     return {
+            //         status:"success",
+            //         message:"successfully added the comment"
+            //     }
+            // } catch (error) {
+            //     console.error(error);
+            //     const rollbackObj = await transaction.rollback().catch(console.error);
+            //     transaction.clean();
+            //     return {
+            //         status:"fail",
+            //         message:"failed to add comment : " + error
+            //     }
+            //   }
+            
             var childComment = new Comment({
                 postId:coment.postId,
                 commentedUser:userId,
@@ -112,12 +139,36 @@ async function comment({userId,comment,postId,commentId}){
                 })
             })
         }else{
-            return{
+            return{                                                                                              
                 status:"fail",
                 message:"unable to find the comment with id : " + commentId
             }
         }
     }else{
+
+        // try{
+        //     const id = transaction.insert("Comment", {
+        //         postId:postId,
+        //         commentedUser:userId,
+        //         comment:comment
+        //     });
+        //     transaction.update("Post", postId, {$inc:{commentCount:1}});
+        //     const final = await transaction.run();
+        //     console.log("final=>",final)
+        //     return {
+        //         status:"success",
+        //         message:"successfully added the comment"
+        //     }
+        // } catch (error) {
+        //     console.error(error);
+        //     const rollbackObj = await transaction.rollback().catch(console.error);
+        //     transaction.clean();
+        //     return {
+        //         status:"fail",
+        //         message:"failed to add comment : " + error
+        //     }
+        //   }
+        
         var coment = new Comment({
             postId:postId,
             commentedUser:userId,
@@ -139,6 +190,22 @@ async function comment({userId,comment,postId,commentId}){
             })
         })
     }
+}
+
+async function updateCommentCount({postId}){
+    await Post.findOneAndUpdate({_id: postId}, {$inc:{commentCount:1}}, (err, doc) => {
+        if (err) {
+            return {
+                status:"fail",
+                message:"Error updating comment count : " + err.message
+            }
+        }else{
+            return {
+                status:"success",
+                message:"Successfully updated the commentCount"
+            }
+        }
+    });    
 }
 
 async function getComment({postId,userId}){
@@ -200,9 +267,9 @@ async function getProfile({userId}){
     if(user){
         Object.assign(response,{
             status:"success",
-            name:user.name,
-            profilePic:user.profilePic,
-            hobbies : user.hobbies
+            userId:user.id,
+            userName:user.name,
+            userPhoto:user.profilePic,
         })
         Object.assign(response,await new Promise((resolve)=>{
             School.find({$or:[{_id:user.highSchoolId},
@@ -211,48 +278,58 @@ async function getProfile({userId}){
                 function(err,schools){
                     if(err){
                         resolve({
-                            schools : "Error fetching schools of the user : " + err.message,
+                            message : "Error fetching schools of the user : " + err.message,
                             status : "fail"
                         })
                     }else{
                         resolve({
-                            schools:schools
+                            stickers:schools
                         })
                     }
                 })
         }))
-        let responseSchools = []
-        for(const school of response.schools){
-            const schoolSticker = await SchoolList.findOne({name:school.name})
-            responseSchools.push({
+        let stickers = []
+        for(const school of response.stickers){
+            // const schoolSticker = await SchoolList.findOne({name:school.name})
+            stickers.push({
+                        stickerId:school._id,
+                        type:school.schoolType,
                         name:school.name,
                         enrollment:school.enrollment,
-                        sticker:schoolSticker?schoolSticker.logo:"school sticker not available"
+                        verificationStatus:school.verificationStatus
+                        // sticker:schoolSticker?schoolSticker.logo:"school sticker not available"
                     })
         }
-        Object.assign(response,{schools:responseSchools})
-        Object.assign(response,await new Promise((resolve)=>{
-            Post.find({userId:user.id},function(err , posts){
-                if(err){
-                    resolve({
-                        posts:"Error fetching schools of the user : " + err.message,
-                        status:"fail"
-                    })
-                }else{
-                    resolve({
-                        posts:posts.map(function(doc){
-                            return {
-                                post:doc.image,
-                                text:doc.text,
-                                dateOfPost:doc.dateOfPost,
-                                likeCount:doc.likes.length,
-                                commentCount:doc.commentCount
-                            } 
-                        })
-                    })
-                }
+        for(let hobby of user.hobbies){
+            stickers.push({
+                stickerId: hobby,
+                type: "hobby",
+                name: hobby
             })
-        }))
+        }
+        Object.assign(response,{stickers:stickers})
+        // Object.assign(response,await new Promise((resolve)=>{
+        //     Post.find({userId:user.id},function(err , posts){
+        //         if(err){
+        //             resolve({
+        //                 message:"Error fetching schools of the user : " + err.message,
+        //                 status:"fail"
+        //             })
+        //         }else{
+        //             resolve({
+        //                 posts:posts.map(function(doc){
+        //                     return {
+        //                         post:doc.image,
+        //                         text:doc.text,
+        //                         dateOfPost:doc.dateOfPost,
+        //                         likeCount:doc.likes.length,
+        //                         commentCount:doc.commentCount
+        //                     } 
+        //                 })
+        //             })
+        //         }
+        //     })
+        // }))
 
         return response
         

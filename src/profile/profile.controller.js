@@ -10,7 +10,7 @@ var upload = multer({ dest: 'assets/Images' })
 router.get('/get', authenticateJWT ,getProfile);
 router.post('/post', upload.single('post'),authenticateJWT ,addPost);
 router.post('/upload' , upload.single('profilePic') ,authenticateJWT,uploadProfilePic);
-router.post('/comment', authenticateJWT ,comment);
+router.post('/comment', authenticateJWT ,addComment);
 router.post('/get/comment', authenticateJWT ,getComment);
 router.post('/like/post', authenticateJWT ,likePost);
 router.post('/dislike/post', authenticateJWT ,dislikePost);
@@ -53,8 +53,8 @@ function addPost(req, res, next) {
         .catch(err => next(err));
 }
 
-function comment(req, res, next) {
-    profileService.comment(req.body)
+function addComment(req, res, next) {
+    profileService.addComment(req.body)
         .then(response => res.json(response))
         .catch(err => next(err));
 }
