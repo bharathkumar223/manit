@@ -1,10 +1,11 @@
 const fs = require('fs');
-const { School, SchoolList, Comment ,Post, User} = require('../../_helpers/db');
+const { School, SchoolList, Comment ,Post, User, Hobby} = require('../../_helpers/db');
 const { post } = require('./profile.controller');
 // const Transaction = require("mongoose-transactions");
 // const transaction = new Transaction();
 module.exports = {
     uploadProfilePic,
+    removeProfilePic,
     getProfile,
     addPost,
     addComment,
@@ -13,6 +14,33 @@ module.exports = {
     dislikePost
 };
 
+async function removeProfilePic({userId}){
+    const user = await User.findOne({id:userId})
+    if(user){
+        user.profilePic = undefined
+        return new Promise((resolve)=>{
+             user.save()
+            .then(post=>{
+                resolve({
+                    status:"success",
+                    message:"successfully removed the profile pic"
+                })
+            })
+            .catch(err=>{
+                resolve({
+                    status:"fail",
+                    message:"error while removing the profile pic : " + err.message
+                })
+            })
+        })
+    }else{
+        return {
+            status:"fail",
+            message:"unable to find user for the given id : " + userId
+        }
+    }
+    
+}
 async function dislikePost({postId,userId}){
     const post = await Post.findOne({_id:postId})
     if(!post){
@@ -301,10 +329,11 @@ async function getProfile({userId}){
                     })
         }
         for(let hobby of user.hobbies){
+            const userHobby = await Hobby.findOne({_id:hobby})
             stickers.push({
                 stickerId: hobby,
                 type: "hobby",
-                name: hobby
+                name: userHobby?userHobby.name:"unknownHobby"
             })
         }
         Object.assign(response,{stickers:stickers})

@@ -1,5 +1,5 @@
 const { reject } = require('lodash');
-const { School} = require('../../_helpers/db');
+const { School, Hobby} = require('../../_helpers/db');
 const db = require('../../_helpers/db');
 const SchoolList = db.SchoolList
 const User = db.User
@@ -13,8 +13,129 @@ module.exports = {
     updateSchool,
     deleteSchool,
     updateSchoolStatus,
-    cancelSchool
+    cancelSchool,
+    getStickerInfo,
+    removeSticker
 };
+
+async function removeSticker({stickerId,userId}){
+    const school = await School.findOne({_id:stickerId})
+    if(!school){
+        const hobby = await Hobby.findOne({_id:stickerId})
+        if(!hobby){
+            return {
+                status:"fail",
+                message:"sticker not found for the given id : " + stickerId
+            }
+        }
+        const user = await User.findOne({id:userId})
+        if(user){
+            return new Promise((resolve)=>{
+                let temp = user.hobbies
+                const index = temp.indexOf(stickerId);
+                if (index > -1) {
+                    temp.splice(index, 1);
+                    Object.assign(user,{hobbies:temp})
+                    user.save()
+                    .then(()=>{
+                        resolve( {
+                            status:"success",
+                            message:"successfully removed the sticker"
+                        })
+                    })
+                    .catch(err=>{
+                        resolve({
+                            status:"fail",
+                            message:"Error while removing the sticker : " + err.message
+                        })
+                    })
+                }else{
+                    resolve({
+                        status:"fail",
+                        message:"user " + userId + " does not possess the sticker " + hobby.name
+                    })
+                }
+            })
+        }else{
+            return {
+                status:"fail",
+                message:"user not found for the given id :  " + userId
+            }
+        }
+    }else{
+        return new Promise((resolve) => {
+            let unset
+            if(school.schoolType === 'mid'){
+                unset = {$unset:{midSchoolId:1}}
+            }else if(school.schoolType === 'high'){
+                unset = {$unset:{highSchoolId:1}}
+            }else if(school.schoolType === 'university'){
+                unset = {$unset:{universityId:1}}
+            }else{
+                resolve({
+                    status:"fail",
+                    message:"sticker school type is not valid : " + school.schoolType
+                })
+            }
+            User.updateOne({id:userId},unset,function(err){
+                if(err){
+                    resolve({
+                        status:"fail",
+                        message:"Unable to remove the school sticker : "+err.message
+                    })
+                }
+                School.deleteOne({_id:stickerId},function(err,doc){
+                    if(err){
+                        resolve({
+                            status:"fail",
+                            message:"unable to remove the school sticker ," + err.message
+                        })
+                    }else{
+                        resolve({
+                            status:"success",
+                            message:"successfully removed the school sticker"
+                        })  
+                        
+                    }
+                })
+            })
+            
+        })   
+    }
+}
+
+async function getStickerInfo({stickerId}){
+    const school = await School.findOne({_id:stickerId})
+    if(!school){
+        const hobby = await Hobby.findOne({_id:stickerId})
+        if(!hobby){
+            return {
+                status:"fail",
+                message:"sticker not found for the given id : " + stickerId
+            }
+        }
+        return {
+          status:"success",
+          sticker:{
+              type:"hobby",
+              name:hobby.name
+          }  
+        }
+    }
+    let sticker = {
+        type:school.schoolType,
+        name:school.name,
+        enrollment:school.enrollment,
+        yearOfEntrance:school.yearOfEntrance
+    }
+    if(school.schoolType === "university"){
+        Object.assign(sticker,{department:school.department})
+    }
+    return {
+        status:"success",
+        sticker:sticker
+    }
+}
 
 async function cancelSchool({schoolId}){
     const school = await School.findOne({_id:schoolId})
@@ -274,7 +395,8 @@ async function savehighSchoolInfo({userId, schoolName,enrollment, yearOfEntrance
                 await user.save();
                 return{
                     status:"success",
-                    message:"successfully saved the school Info"
+                    message:"successfully saved the school Info",
+                    id:school._id
                 }
             }else{
                 return{
@@ -314,7 +436,8 @@ async function savemidSchoolInfo({userId, schoolName,enrollment, yearOfEntrance 
                 await user.save();
                 return{
                     status:"success",
-                    message:"successfully saved the school Info"
+                    message:"successfully saved the school Info",
+                    id:school._id
                 }
             }else{
                 return{
@@ -360,7 +483,8 @@ async function saveUnivInfo({userId, schoolName,enrollment, yearOfEntrance, depa
                     .then((user)=>{
                         resolve( { 
                             status:"success",
-                            message:"successfully saved the school Info"
+                            message:"successfully saved the school Info",
+                            id:schoolDoc._id
                         })
                     })
                     .catch(error=>{

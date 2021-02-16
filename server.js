@@ -22,7 +22,6 @@ app.use('/hobby', require('./src/hobby/hobby.controller'));
 app.use('/document', require('./src/documentVerification/document.verification.controller'));
 app.use('/user', require('./src/userVerification/user.verification.controller'));
 app.use('/profile', require('./src/profile/profile.controller'));
-
 // global error handler
 app.use(errorHandler);
 

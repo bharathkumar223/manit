@@ -5,41 +5,48 @@ const School = db.School
 const schoolService = require('../school/school.service');
 module.exports = {
     userRequest,
-    getRequestInfo
+    getStickerVerificationInfo
 };
 
-async function getRequestInfo({userId,school}){
-    let documentInprocess
-    const response = await getRequest(userId,school)
-    if(response.status === "success"){
-        const documentVerification = await DocumentVerification.findOne({
-            id:userId,
-            school:school,
-            status:"Pending"
-        })
-        if(documentVerification){
-            documentInprocess = true
-        }else{
-            documentInprocess = false
+// async function getRequestInfo({userId,school}){
+//     let documentInprocess
+//     const response = await getRequest(userId,school)
+//     if(response.status === "success"){
+//         const documentVerification = await DocumentVerification.findOne({
+//             id:userId,
+//             school:school,
+//             status:"Pending"
+//         })
+//         if(documentVerification){
+//             documentInprocess = true
+//         }else{
+//             documentInprocess = false
+//         }
+//     }
+//     return{
+//         ...response,
+//         documentInprocess:documentInprocess
+//     }
+// }
+
+async function getStickerVerificationInfo({stickerId,userId}){
+    const school = await School.findOne({_id:stickerId})
+    if(!school){
+        return{
+            status:"fail",
+            message:"sticker with the given id not found : " + stickerId
         }
     }
-    return{
-        ...response,
-        documentInprocess:documentInprocess
-    }
-}
-
-async function getRequest(userId,school){
-    return new Promise((resolve, reject) => {
-    UserVerification.find({requestBy:userId,school:school},
+    let toExistingUsers = await new Promise((resolve) => {
+    UserVerification.find({requestBy:userId,school:stickerId},
         function(err,docs){
             if(err){
-                reject({
+                resolve({
                     status:"fail",
                     message:"Error while fetching requestInfo , "+err
                 })
             }else{
-                let pending = approve = decline = pass = 0,documentInprocess
+                let pending = approve = decline = pass = requests = 0
                 for(let doc of docs){
                     switch(doc.status){
                         case "Pending":{
@@ -60,25 +67,85 @@ async function getRequest(userId,school){
                         }
                     }
                 }
+                requests = pending+pass+approve+decline
+                let verificationStatus
+                if(requests === 0){
+                    verificationStatus = "none"
+                }else if(approve>3){
+                    verificationStatus = "approved"
+                }else if(decline >3){
+                    verificationStatus = "declined"
+                }else{
+                    verificationStatus = "pending"
+                }
                 resolve({
                     status:"success",
-                    number:pending+pass+approve+decline,
+                    verificationStatus:verificationStatus,
+                    requests:requests,
                     pending:pending,
                     approve:approve,
                     decline:decline,
-                    pass:pass
+                    pass:pass,
                 }) 
                 
             }
         })
     })
+    let documentVerificationStatus
+    const document = await DocumentVerification.findOne({school:stickerId})
+    if(document){
+        documentVerificationStatus = document.status
+    }else{
+        documentVerificationStatus = "none"
+    }
+    let response = {
+        status:toExistingUsers.status,
+        verificationStatus:school.verificationStatus,
+        toExistingUsers:toExistingUsers,
+        byDocument:{
+            verificationStatus:documentVerificationStatus
+        }
+    }
+
+    if(response.status === "fail"){
+        Object.assign(response,{message:toExistingUsers.message})
+    }
+
+    return response
+
 }
 
 async function userRequest(req){
     
     const {userId,requestedTo,schoolName,enrollment,
             department,yearOfEntrance,schoolType} = req.body
-    
+
+    const schoolSaveStatus = await new Promise((resolve) =>{
+        schoolService.save({schoolName:schoolName,
+            userId:userId,
+            enrollment:enrollment,
+            department:department,
+            yearOfEntrance:yearOfEntrance,
+            schoolType:schoolType})
+            .then(response => {
+                resolve({
+                    status:response.status,
+                    message: response.message,
+                    id:response.id
+                })
+            })
+            .catch(err => {
+                resolve({
+                    status:"fail",
+                    message:"Error while saving school info , " + err.message
+                })
+            });
+        })
+
+    if(schoolSaveStatus.status === "fail"){
+        return schoolSaveStatus
+    }
+
     let userRequests = []
     for(const requestTo of requestedTo){
         userRequests = [
@@ -87,7 +154,7 @@ async function userRequest(req){
                 const userVerification = new UserVerification({
                     requestBy:userId,
                     requestTo:requestTo,
-                    school:schoolName
+                    school:schoolSaveStatus.id
                 })
                 userVerification.save()
                 .then(()=>{
@@ -107,28 +174,10 @@ async function userRequest(req){
             })
         ]
     }
-
-    const schoolSaveStatus = await new Promise((resolve) =>{
-        schoolService.save({schoolName:schoolName,
-            userId:userId,
-            enrollment:enrollment,
-            department:department,
-            yearOfEntrance:yearOfEntrance,
-            schoolType:schoolType})
-            .then(response => {
-                resolve({
-                    status:response.status,
-                    message: response.message,
-                })
-            })
-            .catch(err => {
-                resolve({
-                    status:"fail",
-                    message:"Error while saving school info , "+err.message
-                })
-            });
-        })
-
-    return{ userRequests:userRequests,
-            schoolSaveStatus:schoolSaveStatus}
+    
+    return { 
+        status:"success",
+        userRequests:userRequests,
+        schoolSaveStatus:schoolSaveStatus
+    }
 }

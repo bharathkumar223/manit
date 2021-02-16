@@ -6,6 +6,7 @@ const authenticateJWT = require('../../auth/auth')
 // routes
 router.post('/request', authenticateJWT ,userRequest);
 router.get('/requestInfo', authenticateJWT ,getRequestInfo);
+router.post('/sticker/verificationInfo', authenticateJWT ,getStickerVerificationInfo);
 
 module.exports = router;
 
@@ -19,6 +20,13 @@ function userRequest(req, res, next) {
 function getRequestInfo(req, res, next) {
     console.log(req.body)
     userService.getRequestInfo({...req.body,...req.query})
+        .then(response => res.json(response))
+        .catch(err => next(err));
+}
+
+function getStickerVerificationInfo(req, res, next) {
+    console.log(req.body)
+    userService.getStickerVerificationInfo({...req.body,...req.query})
         .then(response => res.json(response))
         .catch(err => next(err));
 }

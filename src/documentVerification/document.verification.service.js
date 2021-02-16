@@ -10,58 +10,70 @@ module.exports = {
 
 async function docUpload(req){
     const {schoolName,yearOfEntrance,department,userId, enrollment,schoolType} = req.query
-    const documentVerification = new DocumentVerification({
-        id:userId,
-        yearOfEntrance:yearOfEntrance,
-        department:department,
-        school:schoolName
-    });
     if(req.file && req.file.filename){
         var docData = fs.readFileSync('assets/Images/'+req.file.filename);
         var document = {
             data:docData,
             contentType:req.file.mimetype
         }
-        Object.assign(documentVerification,{document:document});
-        return new Promise((resolve) => {
-            let message = ""
-            fs.unlink('assets/Images/'+req.file.filename, (err) => {
-                if (err){
-                    message+= " and error while deleting redundant file," + err
-                } else{
-                    console.log('assets/Images/'+req.file.filename+' was deleted');
-                }
-            });
-
-            documentVerification.save()
-            .then((doc)=>{
-                schoolService.save({schoolName:schoolName,
-                                    userId:userId,
-                                    enrollment:enrollment,
-                                    department:department,
-                                    yearOfEntrance:yearOfEntrance,
-                                    schoolType:schoolType
-                                    })
-                .then(response => {
+        const response = await new Promise((resolve) => {
+            schoolService.save({
+                schoolName:schoolName,
+                userId:userId,
+                enrollment:enrollment,
+                department:department,
+                yearOfEntrance:yearOfEntrance,
+                schoolType:schoolType
+                })
+            .then(school=>{
+                if(school.status === "fail"){
                     resolve({
-                        status:response.status==="success"?"success":"fail",
-                        message:"uploaded the file successfully " + " and " 
-                                + response.message + message
+                        status:"fail",
+                        message:"Error while saving school info : " + school.message
+                    })
+                }
+                const documentVerification = new DocumentVerification({
+                    id:userId,
+                    yearOfEntrance:yearOfEntrance,
+                    department:department,
+                    school:school.id,
+                    document:document
+                });
+                documentVerification.save()
+                .then((doc)=>{
+                    resolve({
+                        status:"success",
+                        message:"successfully saved school info and uploaded the document"
                     })
                 })
-                .catch(err => {
+                .catch(err=>{
                     resolve( {
                         status:"fail",
-                        message:"uploaded the file successfully but Error while saving school info , "+err.message + message
+                        message:" Error while saving the file uploaded : " + err.message
                     })
-                });
-            })
-            .catch(err=>{
-                resolve( {
-                    status:"fail",
-                    message:" Error while saving the file uploaded , "+err.message + message
                 })
             })
+            .catch(err=>{
+                resolve({
+                    status:"fail",
+                    message:"Error while saving school info : " + err.message
+                })
+            })  
+        })
+        return new Promise((resolve)=>{
+            fs.unlink('assets/Images/'+req.file.filename, (err) => {
+                if (err){
+                    resolve({
+                        status:"fail",
+                        message:response.message + " and error while deleting redundant file : " + err.message
+                    })
+                } else{
+                    console.log('assets/Images/'+req.file.filename+' was deleted');
+                    resolve({
+                        ...response
+                    })
+                }
+            });
         })
     }else{
         return{

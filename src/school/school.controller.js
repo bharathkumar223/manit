@@ -3,7 +3,7 @@ const router = express.Router();
 const schoolService = require('./school.service');
 var multer  = require('multer')
 var upload = multer({ dest: __dirname +'uploads/' });
-const authenticateJWT = require('../../auth/auth')
+const authenticateJWT = require('../../auth/auth');
 
 // routes
 
@@ -16,11 +16,24 @@ router.get('/getById/:id', authenticateJWT ,getById);
 router.put('/update', authenticateJWT ,updateSchool);
 router.delete('/delete', authenticateJWT ,deleteSchool);
 router.put('/cancel', authenticateJWT ,cancelSchool);
-
+router.post('/stickerInfo',authenticateJWT,getStickerInfo)
+router.delete('/remove/sticker',authenticateJWT,removeSticker)
 module.exports = router;
 
 function search(req, res, next) {
     schoolService.search({...req.query,...req.body})
+        .then(response => res.json(response))
+        .catch(err => next(err));
+}
+
+function getStickerInfo(req, res, next) {
+    schoolService.getStickerInfo({...req.query,...req.body})
+        .then(response => res.json(response))
+        .catch(err => next(err));
+}
+
+function removeSticker(req, res, next) {
+    schoolService.removeSticker({...req.query,...req.body})
         .then(response => res.json(response))
         .catch(err => next(err));
 }

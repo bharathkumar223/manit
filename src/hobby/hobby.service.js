@@ -1,4 +1,6 @@
+const { Hobbies } = require('../../_helpers/db');
 const db = require('../../_helpers/db');
+const { findOne } = require('../users/user.model');
 const Hobby = db.Hobby
 const User = db.User
 module.exports = {
@@ -62,12 +64,34 @@ async function saveHobbies({userId, hobbies}){
         // the array is defined and has at least one element
         const user = await User.findOne({id:userId});
         if(user){
-            Object.assign(user,{hobbies:hobbies});
-            await user.save();
-            return {
-                status : "success",
-                message : "Hobbies successfully saved"
-            };
+            let newHobbies = []
+            for(let hobby of hobbies){
+                const userHobby = await Hobby.findOne({name:hobby})
+                if(!userHobby){
+                    return {
+                        status:"fail",
+                        message:"hobby type : " + hobby + " is not valid" 
+                    }
+                }else{
+                    newHobbies.push(userHobby._id)
+                }
+            }
+            Object.assign(user,{hobbies:newHobbies});
+            return new Promise((resolve)=>{
+                user.save()
+                .then(()=>{
+                    resolve( {
+                        status : "success",
+                        message : "Hobbies successfully saved"
+                    })
+                })
+                .catch(err=>{
+                    resolve( {
+                        status : "fail",
+                        message : "Error while saving hobbies : " + err.message
+                    })
+                })
+            })
         }else{
             return {
                 status : "fail",

@@ -10,6 +10,7 @@ var upload = multer({ dest: 'assets/Images' })
 router.get('/get', authenticateJWT ,getProfile);
 router.post('/post', upload.single('post'),authenticateJWT ,addPost);
 router.post('/upload' , upload.single('profilePic') ,authenticateJWT,uploadProfilePic);
+router.delete('/delete'  ,authenticateJWT,removeProfilePic);
 router.post('/comment', authenticateJWT ,addComment);
 router.post('/get/comment', authenticateJWT ,getComment);
 router.post('/like/post', authenticateJWT ,likePost);
@@ -19,6 +20,12 @@ module.exports = router;
 
 function uploadProfilePic(req, res, next) {
     profileService.uploadProfilePic(req)
+        .then(response => res.json(response))
+        .catch(err => next(err));
+}
+
+function removeProfilePic(req, res, next) {
+    profileService.removeProfilePic(req.body)
         .then(response => res.json(response))
         .catch(err => next(err));
 }
