@@ -7,7 +7,6 @@ module.exports = function authenticateJWT(req, res, next) {
 
     if (authHeader) {
         const token = authHeader.split(' ')[1];
-
         jwt.verify(token, config.secret, (err, user) => {
             if (err) {
                 return res.sendStatus(403);

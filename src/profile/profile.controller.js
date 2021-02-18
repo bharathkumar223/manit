@@ -8,11 +8,14 @@ var upload = multer({ dest: 'assets/Images' })
 
 // routes
 router.get('/get', authenticateJWT ,getProfile);
-router.post('/post', upload.single('post'),authenticateJWT ,addPost);
+router.post('/photo', upload.single('document'),authenticateJWT ,uploadPhoto);
+router.get('/get/photos',authenticateJWT, getPhotos)
+router.delete('/remove/photo',authenticateJWT,removePhoto)
+router.post('/edit/photo',upload.single('document') ,authenticateJWT, editPhoto)
 router.post('/upload' , upload.single('profilePic') ,authenticateJWT,uploadProfilePic);
 router.delete('/delete'  ,authenticateJWT,removeProfilePic);
 router.post('/comment', authenticateJWT ,addComment);
-router.post('/get/comment', authenticateJWT ,getComment);
+router.post('/get/comments', authenticateJWT ,getComments);
 router.post('/like/post', authenticateJWT ,likePost);
 router.post('/dislike/post', authenticateJWT ,dislikePost);
 
@@ -20,6 +23,25 @@ module.exports = router;
 
 function uploadProfilePic(req, res, next) {
     profileService.uploadProfilePic(req)
+        .then(response => res.json(response))
+        .catch(err => next(err));
+}
+
+function removePhoto(req, res, next) {
+    profileService.removePhoto(req.body)
+        .then(response => res.json(response))
+        .catch(err => next(err));
+}
+
+function editPhoto(req, res, next) {
+    profileService.editPhoto(req)
+        .then(response => res.json(response))
+        .catch(err => next(err));
+}
+
+function getPhotos(req, res, next) {
+    console.log(req.body)
+    profileService.getPhotos(req.body)
         .then(response => res.json(response))
         .catch(err => next(err));
 }
@@ -42,8 +64,8 @@ function dislikePost(req, res, next) {
         .catch(err => next(err));
 }
 
-function getComment(req, res, next) {
-    profileService.getComment(req.body)
+function getComments(req, res, next) {
+    profileService.getComments(req.body)
         .then(response => res.json(response))
         .catch(err => next(err));
 }
@@ -54,8 +76,8 @@ function getProfile(req, res, next) {
         .catch(err => next(err));
 }
 
-function addPost(req, res, next) {
-    profileService.addPost(req)
+function uploadPhoto(req, res, next) {
+    profileService.uploadPhoto(req)
         .then(response => res.json(response))
         .catch(err => next(err));
 }

@@ -1,4 +1,5 @@
 const fs = require('fs');
+const { resolve } = require('path');
 const { School, SchoolList, Comment ,Post, User, Hobby} = require('../../_helpers/db');
 const { post } = require('./profile.controller');
 // const Transaction = require("mongoose-transactions");
@@ -7,12 +8,134 @@ module.exports = {
     uploadProfilePic,
     removeProfilePic,
     getProfile,
-    addPost,
+    uploadPhoto,
     addComment,
-    getComment,
+    getComments,
     likePost,
-    dislikePost
+    dislikePost,
+    getPhotos,
+    editPhoto,
+    removePhoto
 };
+
+async function removePhoto({photoId,userId}){
+    try{
+        const post = await Post.findOne({userId:userId,_id:photoId})
+        if(!post){
+            return {
+                status:"fail",
+                message:"Unable to find photo for the given userId and photoId"
+            } 
+        }
+        return new Promise((resolve)=>{
+            
+            Post.deleteOne({userId:userId,_id:photoId},function(err,doc){
+                if(err){
+                    resolve({
+                        status:"fail",
+                        message:"Error while removing photo : " + err.message
+                    })
+                }else{
+                    resolve({
+                        status:"success",
+                        message:"successfully removed the photo " 
+                    })
+                }
+            })
+            
+        })
+    }catch(err){
+        resolve({
+            status:"fail",
+            message:"Error while removing photo : " + err
+        })
+    }
+}
+
+async function editPhoto(req){
+    const {userId,photoId} = req.query
+    const post = await Post.findOne({userId:userId,_id:photoId})
+    if(post){
+        if(req.file && req.file.filename){
+            var docData = fs.readFileSync('assets/Images/'+req.file.filename);
+            var image = {
+                data:docData,
+                contentType:req.file.mimetype
+            }
+            Object.assign(post,{image:image})
+            let message = ""
+            fs.unlink('assets/Images/'+req.file.filename, (err) => {
+                if (err){
+                    message+= " , error while deleting redundant file :" + err
+                } else{
+                    console.log('assets/Images/'+req.file.filename+' was deleted');
+                }
+            });
+            return new Promise((resolve) => {
+                post.save()
+                .then(user=>{
+                    resolve({
+                        status:"success",
+                        message:"photo edited successfully " + message
+                    })
+                })
+                .catch(err=>{
+                    resolve( {
+                        status:"fail",
+                        message:"Error while editing photo : " + err.message  + message
+                    })
+                })
+            })
+        }else{
+            return{
+                status:"fail",
+                message:"Unable to extract the file attached,please try again"
+            }
+        }
+    }else{
+        return{
+            status:"fail",
+            message:"Unable to find photo for the given userId and photoId"
+        } 
+    }
+}
+async function getPhotos({userId}){
+    const user = await User.findOne({id:userId})
+    if(user){
+        return new Promise((resolve)=>{
+            Post.find({userId:userId},function(err,docs){
+                if(err){
+                    resolve({
+                        status:"fail",
+                        message:"error while fetching photos : " + err.message
+                    })
+                }
+                resolve({
+                    status:"success",
+                    photos:docs.map(photo=>{
+                        return {
+                            userId:userId,
+                            userName:user.name,
+                            profilePic:user.profilePic,
+                            photoId:photo._id,
+                            uri:photo.image,
+                            createdDate:photo.createdDate,
+                            isLiked:photo.isLiked,
+                            likes:photo.likes.length,
+                            comments:photo.commentCount,
+                            bodyText:photo.text
+                        }
+                    })
+                })
+            })
+        })
+    }else{
+        return {
+            status:"fail",
+            message:"unable to find user for the given id : " + userId
+        }
+    }
+}
 
 async function removeProfilePic({userId}){
     const user = await User.findOne({id:userId})
@@ -41,6 +164,7 @@ async function removeProfilePic({userId}){
     }
     
 }
+
 async function dislikePost({postId,userId}){
     const post = await Post.findOne({_id:postId})
     if(!post){
@@ -236,21 +360,27 @@ async function updateCommentCount({postId}){
     });    
 }
 
-async function getComment({postId,userId}){
-    let filter = {postId:postId,parentComment:{$exists: false}}
-    const post = await Post.findOne({_id:postId})
-    if(post){
-        if(!(post.userId === userId)){
-            filter = {
-                ...filter,
-                commentedUser:userId
-            }
+async function getComments({photoId,userId}){
+    let filter = {photoId:photoId,parentComment:{$exists: false}}
+    const user = await User.findOne({id:userId})
+    if(!user){
+        return{
+            status:"fail",
+            message:"unable to find user for the given user Id : " + userId
         }
-    }else{
+    }
+    const post = await Post.findOne({_id:photoId})
+    if(!post){
         return{
             status:"fail",
             message:"unable to find post for the given postId : " + postId
         }
+        // if(!(post.userId === userId)){
+        //     filter = {
+        //         ...filter,
+        //         commentedUser:userId
+        //     }
+        // }
     }
     const parentComments = await new Promise((resolve)=>{
         Comment.find(filter,function(err,docs){
@@ -262,7 +392,21 @@ async function getComment({postId,userId}){
             }else{
                 resolve({
                     status:"success",
-                    comments:docs
+                    photoId:post._id,
+                    userId:userId,
+                    userName:user.name,
+                    profilePic:user.profilePic,
+                    createdDate:post.createdDate,
+                    bodyText:post.text,
+                    comments:docs.map(comment=>{
+                        return{
+                            userId:comment.commentedUser,
+                            userName:comment.commentedUserName,
+
+                        }
+                        
+
+                    })
                 })
                 
             }
@@ -271,6 +415,7 @@ async function getComment({postId,userId}){
 
     if(parentComments.status === "success"){
         for(let comment of parentComments.comments){
+            const user = await User.findOne({id:comment.commentedUser})
             const repliedComments = await new Promise((resolve)=>{
                 Comment.find({parentComment: comment._id,postId:postId}, function(err, docs) {
                     if(err){
@@ -419,8 +564,9 @@ async function uploadProfilePic(req){
     }
 }
 
-async function addPost(req){
-    const {userId,text} = req.body
+async function uploadPhoto(req){
+    const {userId} = req.body
+    const {bodyText} = req.query
     const user = await User.findOne({id:userId})
     if(!user){
         return {
@@ -436,8 +582,9 @@ async function addPost(req){
         }
         const post = new Post({
             userId:user.id,
-            text:text,
-            image:image
+            text:bodyText,
+            image:image,
+            userName:user.name
         })
         let message = ""
         fs.unlink('assets/Images/'+req.file.filename, (err) => {
@@ -452,13 +599,13 @@ async function addPost(req){
             .then(user=>{
                 resolve({
                     status:"success",
-                    message:"post saved successfully " + message
+                    message:"photo saved successfully " + message
                 })
             })
             .catch(err=>{
                 resolve( {
                     status:"fail",
-                    message:"Error while saving post : " + err.message  + message
+                    message:"Error while saving photo : " + err.message  + message
                 })
             })
         })

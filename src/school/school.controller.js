@@ -16,8 +16,7 @@ router.get('/getById/:id', authenticateJWT ,getById);
 router.put('/update', authenticateJWT ,updateSchool);
 router.delete('/delete', authenticateJWT ,deleteSchool);
 router.put('/cancel', authenticateJWT ,cancelSchool);
-router.post('/stickerInfo',authenticateJWT,getStickerInfo)
-router.delete('/remove/sticker',authenticateJWT,removeSticker)
+
 module.exports = router;
 
 function search(req, res, next) {
@@ -26,17 +25,6 @@ function search(req, res, next) {
         .catch(err => next(err));
 }
 
-function getStickerInfo(req, res, next) {
-    schoolService.getStickerInfo({...req.query,...req.body})
-        .then(response => res.json(response))
-        .catch(err => next(err));
-}
-
-function removeSticker(req, res, next) {
-    schoolService.removeSticker({...req.query,...req.body})
-        .then(response => res.json(response))
-        .catch(err => next(err));
-}
 
 function cancelSchool(req, res, next) {
     schoolService.cancelSchool({...req.query,...req.body})

@@ -200,21 +200,21 @@ async function sendOTP(user){
         return new Promise((resolve, reject) => {
             springedge.messages.send(params, 5000, function (err, response) {
         
-                if (response.status) {
+                // if (response {
                     console.log("response=> ",response);
                     resolve({
                         status:"success",
                         message:"successfully sent the OTP",
                         OtpDetails:response
                     })
-                }else{
-                    console.log("error => ",response.error);
-                    reject({
-                        status:"fail",
-                        message:"Unable to send OTP",
-                        OtpDetails:response
-                    })
-                }
+                // }else{
+                //     console.log("error => ",response.error);
+                //     reject({
+                //         status:"fail",
+                //         message:"Unable to send OTP",
+                //         OtpDetails:response
+                //     })
+                // }
             })
         }) 
 }
