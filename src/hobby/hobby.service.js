@@ -1,6 +1,5 @@
 const { Hobbies } = require('../../_helpers/db');
 const db = require('../../_helpers/db');
-const { findOne } = require('../users/user.model');
 const Hobby = db.Hobby
 const User = db.User
 module.exports = {
@@ -60,17 +59,18 @@ async function getHobbies(){
 
 async function saveHobbies({userId, hobbies}){
 
+    try{
     if (typeof hobbies !== 'undefined' && hobbies.length > 0) {
         // the array is defined and has at least one element
         const user = await User.findOne({id:userId});
         if(user){
             let newHobbies = []
-            for(let hobby of hobbies){
-                const userHobby = await Hobby.findOne({name:hobby})
+            for(let hobbyId of hobbies){
+                const userHobby = await Hobby.findOne({_id:hobbyId})
                 if(!userHobby){
                     return {
                         status:"fail",
-                        message:"hobby type : " + hobby + " is not valid" 
+                        message:"unable to find hobby for the given id : " + hobbyId
                     }
                 }else{
                     newHobbies.push(userHobby._id)
@@ -103,6 +103,13 @@ async function saveHobbies({userId, hobbies}){
             status : "fail",
             message:"Hobbies list cannot be empty"
         }
+    }
+    }
+    catch(err){
+        return {
+            status : "fail",
+            message:"Error while saving hobbies : " + err
+        } 
     }
 }
 
