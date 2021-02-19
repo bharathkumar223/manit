@@ -1,5 +1,5 @@
 const { reject } = require('lodash');
-const { School, Hobby} = require('../../_helpers/db');
+const { School, Hobby, UserVerification} = require('../../_helpers/db');
 const db = require('../../_helpers/db');
 const SchoolList = db.SchoolList
 const User = db.User
@@ -257,8 +257,9 @@ async function savehighSchoolInfo({userId, schoolName,enrollment, yearOfEntrance
     if (user) {
         if(user.highSchoolId){
             return { 
-                status:"fail",
-                message:"High School Info has already been saved for the user   "
+                status:"success",
+                message:"High School Info has already been saved for the user   ",
+                id:user.highSchoolId
             }
         }else{
             const school = new School({
@@ -298,8 +299,9 @@ async function savemidSchoolInfo({userId, schoolName,enrollment, yearOfEntrance 
     if (user) {
         if(user.midSchoolId){
             return { 
-                status:"fail",
-                message:"Mid School Info has already been saved for the user "
+                status:"success",
+                message:"Mid School Info has already been saved for the user ",
+                id:user.midSchoolId
             }
         }else{
             const school = new School({
@@ -340,8 +342,9 @@ async function saveUnivInfo({userId, schoolName,enrollment, yearOfEntrance, depa
     if (user) {
         if(user.universityId){
             return { 
-                status:"fail",
-                message:"University Info has already been saved for the user " 
+                status:"success",
+                message:"University Info has already been saved for the user " ,
+                id:user.universityId
             }
         }else{
             const school = new School({
@@ -411,69 +414,191 @@ async function saveUnivInfo({userId, schoolName,enrollment, yearOfEntrance, depa
 
 async function matchSameSchool({userId,schoolType,yearOfEntrance,schoolName}){
 
-    var searchCondition
-
-    
+    const user = await User.findOne({id:userId})
+        if(!user){
+            return {
+                status:"fail",
+                message:"unable to find user for the given id : " + userId
+            }
+        }
+    var searchCondition,schoolId
     if(schoolType === "high"){
                 searchCondition =   { schoolType:"high" } 
+                schoolId = user.highSchoolId
     }else if(schoolType === "mid"){
             searchCondition =   { schoolType:"mid" }
+            schoolId = user.midSchoolId
     }else{
         return{
             status:"fail",
             message:"school type is not valid , please check the school type : "+schoolType
         }
     }
-
-    return new Promise((resolve, reject) => {
+    let schoolResponse = await new Promise((resolve) => {
 
         School.find({ $and: [
             {name: schoolName},
             searchCondition ,
             {yearOfEntrance: yearOfEntrance},
-            {userId:{$ne:userId}}         
+            // {userId:{$ne:userId}}         
         ]},
-                 function(err, docs) {
+            function(err, docs) {
+            console.log("school=>",docs);
+            if(err){
+                resolve( {
+                    status : "fail",
+                    message:err
+                })
+            }else{
+                // Map the docs into an array of just the ids of the user
+                var ids = docs.map(function(doc) { return doc.userId; });
+                resolve({
+                    status:"success",
+                    ids:ids
+                })
+                
+            }
+        });
+      })
+      if(schoolResponse.status === "fail"){
+          return schoolResponse
+      }
+
+      var excludeUsers = []
+      if(schoolId){
+            const excludeUsersRes =  await new Promise((resolve)=>{
+                UserVerification.find({school:schoolId},function(err,docs){
+                    if(err){
+                        resolve({
+                            status : "fail",
+                            message:err
+                        })
+                    }else{
+                        excludeUsers = docs.map(function(doc) { return doc.requestTo; });
+                        resolve({
+                            status:"success"
+                        })
+                    }
+                    
+                })
+            })
+            if(excludeUsersRes.status!==undefined && excludeUsersRes.status === "fail"){
+                return excludeUsersRes
+            }
+        }
+
+        // Get the users whose ids are in the set
+        return new Promise((resolve)=>{
+            User.find({id: {$in: schoolResponse.ids,$nin: excludeUsers}}, function(err, docs) {
+                console.log("users=>",docs);
+                if(err){
+                    resolve( {
+                        status : "fail",
+                        message:err
+                    })
+                }else{
+                    resolve({
+                        status : "success",
+                        users:docs.map(function(doc){
+                            return {
+                                id:doc.id,
+                                name:doc.name,
+                                schoolName:schoolName,
+                                photo:doc.profilePic
+                            } 
+                        })
+                    })
+                }
+            });
+        })
+}
+
+async function matchSameUniv({userId,yearOfEntrance,schoolName,department}){
+
+        const user = await User.findOne({id:userId})
+        if(!user){
+            return {
+                status:"fail",
+                message:"unable to find user for the given id : " + userId
+            }
+        }
+        const schoolId = user.universityId
+        let schoolResponse = await new Promise((resolve) => {
+            School.find({name: schoolName ,
+                schoolType:"university",
+                department:department,
+                yearOfEntrance:yearOfEntrance,
+                userId:{$ne:userId}
+               },
+               function(err, docs) {
                     console.log("school=>",docs);
                     if(err){
-                        reject( {
+                        resolve( {
                             status : "fail",
                             message:err
                         })
                     }else{
                         // Map the docs into an array of just the ids of the user
                         var ids = docs.map(function(doc) { return doc.userId; });
-                    
-                        // Get the users whose ids are in the set
-                        User.find({id: {$in: ids}}, function(err, docs) {
-                            console.log("users=>",docs);
-                            if(err){
-                                reject( {
-                                    status : "fail",
-                                    message:err
-                                })
-                            }else{
-                                resolve({
-                                    status : "success",
-                                    users:docs.map(function(doc){
-                                        return {
-                                            id:doc.id,
-                                            name:doc.name,
-                                            schoolName:schoolName,
-                                            photo:doc.profilePic
-                                        } 
-                                })
-                            })
-                            }
-                        });
+                        resolve({
+                            status:"success",
+                            ids:ids
+                        })
+                        
                     }
-        });
-      })
-}
-
-async function matchSameUniv({userId,yearOfEntrance,schoolName,department}){
-
-    return new Promise((resolve, reject) => {
+                });
+          })
+          if(schoolResponse.status === "fail"){
+              return schoolResponse
+          }
+    
+          var excludeUsers = []
+          if(schoolId){
+                const excludeUsersRes =  await new Promise((resolve)=>{
+                    UserVerification.find({school:schoolId},function(err,docs){
+                        if(err){
+                            resolve({
+                                status : "fail",
+                                message:err
+                            })
+                        }else{
+                            excludeUsers = docs.map(function(doc) { return doc.requestTo; });
+                            resolve({
+                                status:"success"
+                            })
+                        }
+                        
+                    })
+                })
+                if(excludeUsersRes.status!==undefined && excludeUsersRes.status === "fail"){
+                    return excludeUsersRes
+                }
+            }
+    
+            // Get the users whose ids are in the set
+            return new Promise((resolve)=>{
+                User.find({id: {$in: schoolResponse.ids,$nin: excludeUsers}}, function(err, docs) {
+                    console.log("users=>",docs);
+                    if(err){
+                        resolve( {
+                            status : "fail",
+                            message:err
+                        })
+                    }else{
+                        resolve({
+                            status : "success",
+                            users:docs.map(function(doc){
+                                return {
+                                    id:doc.id,
+                                    name:doc.name,
+                                    schoolName:schoolName,
+                                    photo:doc.profilePic
+                                } 
+                            })
+                        })
+                    }
+                });
+            })
 
         School.find({name: schoolName ,
                      schoolType:"university",
@@ -517,7 +642,7 @@ async function matchSameUniv({userId,yearOfEntrance,schoolName,department}){
                 });
             }
         });
-      })
+      
 
      
 }
