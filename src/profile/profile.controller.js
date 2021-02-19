@@ -15,6 +15,9 @@ router.post('/edit/photo',upload.single('document') ,authenticateJWT, editPhoto)
 router.post('/upload' , upload.single('profilePic') ,authenticateJWT,uploadProfilePic);
 router.delete('/delete'  ,authenticateJWT,removeProfilePic);
 router.post('/comment', authenticateJWT ,addComment);
+router.post('/reply/comment', authenticateJWT ,replyComment);
+router.post('/edit/comment', authenticateJWT ,editComment);
+router.delete('/delete/comment', authenticateJWT ,deleteComment);
 router.post('/get/comments', authenticateJWT ,getComments);
 router.post('/like/post', authenticateJWT ,likePost);
 router.post('/dislike/post', authenticateJWT ,dislikePost);
@@ -84,6 +87,24 @@ function uploadPhoto(req, res, next) {
 
 function addComment(req, res, next) {
     profileService.addComment(req.body)
+        .then(response => res.json(response))
+        .catch(err => next(err));
+}
+
+function replyComment(req, res, next) {
+    profileService.replyComment(req.body)
+        .then(response => res.json(response))
+        .catch(err => next(err));
+}
+
+function editComment(req, res, next) {
+    profileService.editComment(req.body)
+        .then(response => res.json(response))
+        .catch(err => next(err));
+}
+
+function deleteComment(req, res, next) {
+    profileService.deleteComment(req.body)
         .then(response => res.json(response))
         .catch(err => next(err));
 }

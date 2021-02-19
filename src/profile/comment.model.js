@@ -5,7 +5,6 @@ const schema = new Schema({
     postId: { type: String,  required: true },
     comment: { type: String,  required: true },
     commentedUser: { type: String ,  required: true},
-    commentedUserName: { type: String ,  required: true},
     dateOfComment: { type: Date, default: Date.now },
     parentComment:{type: String},
     repliedComments:[{

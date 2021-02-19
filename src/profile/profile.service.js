@@ -15,7 +15,10 @@ module.exports = {
     dislikePost,
     getPhotos,
     editPhoto,
-    removePhoto
+    removePhoto,
+    replyComment,
+    editComment,
+    deleteComment
 };
 
 async function removePhoto({photoId,userId}){
@@ -99,6 +102,7 @@ async function editPhoto(req){
         } 
     }
 }
+
 async function getPhotos({userId}){
     const user = await User.findOne({id:userId})
     if(user){
@@ -240,11 +244,26 @@ async function likePost({postId,userId}){
     }
 }
 
-async function addComment({userId,comment,postId,commentId}){
+async function addComment({userId,comment,photoId}){
 
-    if(commentId){
-        const coment = await Comment.findOne({_id:commentId})
-        if(coment){
+    const user = await User.findOne({id:userId})
+    if(!user){
+        return{
+            status:"fail",
+            message:"unable to find user for the given user Id : " + userId
+        }
+    }
+    const post = await Post.findOne({_id:photoId})
+    if(!post){
+        return{
+            status:"fail",
+            message:"unable to find post for the given postId : " + postId
+        }
+    }
+
+    // if(commentId){
+    //     const coment = await Comment.findOne({_id:commentId})
+    //     if(coment){
             // try{
             //     const id = transaction.insert("Comment", {
             //         postId:coment.postId,
@@ -269,34 +288,34 @@ async function addComment({userId,comment,postId,commentId}){
             //     }
             //   }
             
-            var childComment = new Comment({
-                postId:coment.postId,
-                commentedUser:userId,
-                parentComment:coment._id,
-                comment:comment
-            })
-            return new Promise((resolve)=>{
-                childComment.save()
-                .then(comment=>{
-                    resolve({
-                        status:"success",
-                        message:"successfully added the comment"
-                    })
-                })
-                .catch(err=>{
-                    resolve({
-                        status:"fail",
-                        message:"failed to add comment : " + err.message
-                    })
-                })
-            })
-        }else{
-            return{                                                                                              
-                status:"fail",
-                message:"unable to find the comment with id : " + commentId
-            }
-        }
-    }else{
+            // var childComment = new Comment({
+            //     postId:coment.postId,
+            //     commentedUser:userId,
+            //     parentComment:coment._id,
+            //     comment:comment
+            // })
+            // return new Promise((resolve)=>{
+            //     childComment.save()
+            //     .then(comment=>{
+            //         resolve({
+            //             status:"success",
+            //             message:"successfully added the comment"
+            //         })
+            //     })
+            //     .catch(err=>{
+            //         resolve({
+            //             status:"fail",
+            //             message:"failed to add comment : " + err.message
+            //         })
+            //     })
+            // })
+    //     }else{
+    //         return{                                                                                              
+    //             status:"fail",
+    //             message:"unable to find the comment with id : " + commentId
+    //         }
+    //     }
+    // }else{
 
         // try{
         //     const id = transaction.insert("Comment", {
@@ -322,7 +341,7 @@ async function addComment({userId,comment,postId,commentId}){
         //   }
         
         var coment = new Comment({
-            postId:postId,
+            postId:photoId,
             commentedUser:userId,
             comment:comment
         })
@@ -341,6 +360,125 @@ async function addComment({userId,comment,postId,commentId}){
                 })
             })
         })
+    // }
+}
+
+async function replyComment({userId,comment,commentId}){
+    
+    const user = await User.findOne({id:userId})
+    if(!user){
+        return{
+            status:"fail",
+            message:"unable to find user for the given user Id : " + userId
+        }
+    }
+    
+    const coment = await Comment.findOne({_id:commentId})
+    if(coment){        
+        var childComment = new Comment({
+            postId:coment.postId,
+            commentedUser:userId,
+            parentComment:coment._id,
+            comment:comment
+        })
+        return new Promise((resolve)=>{
+            childComment.save()
+            .then(comment=>{
+                resolve({
+                    status:"success",
+                    message:"successfully replied the comment"
+                })
+            })
+            .catch(err=>{
+                resolve({
+                    status:"fail",
+                    message:"failed to reply comment : " + err.message
+                })
+            })
+        })
+    }else{
+        return{                                                                                              
+            status:"fail",
+            message:"unable to find the comment with id : " + commentId
+        }
+    }
+}
+
+async function editComment({userId,comment,commentId}){
+
+    const user = await User.findOne({id:userId})
+    if(!user){
+        return{
+            status:"fail",
+            message:"unable to find user for the given user Id : " + userId
+        }
+    }
+    const post = await Post.findOne({_id:photoId})
+    if(!post){
+        return{
+            status:"fail",
+            message:"unable to find post for the given postId : " + postId
+        }
+    }
+
+    const coment = await Comment.findOne({_id:commentId})
+    if(coment){        
+        Object.assign(coment,{comment:comment})
+        return new Promise((resolve)=>{
+            comment.save()
+            .then(comment=>{
+                resolve({
+                    status:"success",
+                    message:"successfully edited the comment"
+                })
+            })
+            .catch(err=>{
+                resolve({
+                    status:"fail",
+                    message:"failed to edit the comment : " + err.message
+                })
+            })
+        })
+    }else{
+        return{                                                                                              
+            status:"fail",
+            message:"unable to find the comment with id : " + commentId
+        }
+    }
+}
+
+async function deleteComment({userId,comment,commentId}){
+
+    const user = await User.findOne({id:userId})
+    if(!user){
+        return{
+            status:"fail",
+            message:"unable to find user for the given user Id : " + userId
+        }
+    }
+    const coment = await Comment.findOne({_id:commentId})
+    if(coment){        
+        Object.assign(coment,{comment:comment})
+        return new Promise((resolve)=>{
+            comment.save()
+            .then(comment=>{
+                resolve({
+                    status:"success",
+                    message:"successfully edited the comment"
+                })
+            })
+            .catch(err=>{
+                resolve({
+                    status:"fail",
+                    message:"failed to edit the comment : " + err.message
+                })
+            })
+        })
+    }else{
+        return{                                                                                              
+            status:"fail",
+            message:"unable to find the comment with id : " + commentId
+        }
     }
 }
 
@@ -361,7 +499,7 @@ async function updateCommentCount({postId}){
 }
 
 async function getComments({photoId,userId}){
-    let filter = {photoId:photoId,parentComment:{$exists: false}}
+    let filter = {postId:photoId,parentComment:{$exists: false}}
     const user = await User.findOne({id:userId})
     if(!user){
         return{
@@ -383,7 +521,7 @@ async function getComments({photoId,userId}){
         // }
     }
     const parentComments = await new Promise((resolve)=>{
-        Comment.find(filter,function(err,docs){
+        Comment.find({postId:photoId,parentComment:{$exists: false}},function(err,docs){
             if(err){
                 resolve({
                     status:"fail",
@@ -398,40 +536,66 @@ async function getComments({photoId,userId}){
                     profilePic:user.profilePic,
                     createdDate:post.createdDate,
                     bodyText:post.text,
-                    comments:docs.map(comment=>{
-                        return{
-                            userId:comment.commentedUser,
-                            userName:comment.commentedUserName,
-
-                        }
-                        
-
+                    comments:docs
                     })
-                })
+            
+                }
                 
-            }
-        })
+            })
     })
-
+    console.log("parentComments=>",parentComments)
+    let commentsOrganised = []
     if(parentComments.status === "success"){
         for(let comment of parentComments.comments){
-            const user = await User.findOne({id:comment.commentedUser})
+            const parentCommentUser = await User.findOne({id:comment.commentedUser})
             const repliedComments = await new Promise((resolve)=>{
-                Comment.find({parentComment: comment._id,postId:postId}, function(err, docs) {
+                Comment.find({parentComment: comment._id,postId:photoId}, function(err, docs) {
+                    
                     if(err){
                         resolve({
                             repliedComments:"Error fetching reply comments : "+err.message})
                     }else{
-                        resolve({repliedComments:docs})
+                        resolve(docs)
                     }
-                    
-                    })
+                })
             });
-            comment["repliedComments"] = repliedComments.repliedComments
+            console.log("repliedComments=>",repliedComments)
+            let repliedCommentOrganised = []
+            for(let repliedComment of repliedComments){
+                
+                const repliedCommentUser = await User.findOne({id:repliedComment.commentedUser})
+                
+                repliedCommentOrganised = [
+                    ...repliedCommentOrganised,
+                    {
+                        userId:repliedCommentUser.id,
+                        userName:repliedCommentUser.name,
+                        profilePic:repliedCommentUser.profilePic,
+                        commentId:repliedComment._id,
+                        comment:repliedComment.comment,
+                        createdDate:repliedComment.dateOfComment
+                    }
+                ]
+                
+            }
+            commentsOrganised = [
+                ...commentsOrganised,
+                {
+                    userId:parentCommentUser.id,
+                    userName:parentCommentUser.name,
+                    profilePic:parentCommentUser.profilePic,
+                    commentId:comment._id,
+                    comment:comment.comment,
+                    createdDate:comment.dateOfComment,
+                    comments:repliedCommentOrganised
+                }
+            ]
         }
+        console.log("commentsOrganised=>",commentsOrganised)
     }
+    Object.assign(parentComments,{comments:commentsOrganised})
     
-    return parentComments 
+    return parentComments
 }
 
 async function getProfile({userId}){
