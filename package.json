@@ -1,17 +1,20 @@
+  
 {
-    "name": "node-mongo-registration-login-api",
+    "name": "manitoCorpBackendApis",
     "version": "1.0.0",
-    "description": "NodeJS + MongoDB API for User Management, Authentication and Registration",
+    "description": "Nodejs backend apis for manito corp",
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "https://github.com/cornflourblue/node-mongo-registration-login-api.git"
+        "url": "https://github.com/manitocorpkr/BackendApis.git"
     },
     "scripts": {
         "start": "nodemon ./server.js",
-        "start:dev": "nodemon ./server.js"
+        "start:dev": "nodemon ./server.js",
+        "tunnel": "ngrok http 4000"
     },
     "dependencies": {
+        "@vonage/server-sdk": "^2.10.5",
         "bcryptjs": "^2.4.3",
         "body-parser": "^1.19.0",
         "cors": "^2.8.5",
@@ -21,9 +24,13 @@
         "lodash": "^4.17.20",
         "mongodb": "^3.5.9",
         "mongoose": "^5.9.21",
+        "mongoose-transactions": "^1.1.4",
         "multer": "^1.4.2",
+        "nexmo": "^2.9.1",
+        "ngrok": "^3.4.0",
         "rootpath": "^0.1.2",
-        "springedge": "^1.0.5"
+        "springedge": "^1.0.5",
+        "twilio": "^3.56.0"
     },
     "devDependencies": {
         "nodemon": "^2.0.7"
