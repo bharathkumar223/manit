@@ -187,7 +187,7 @@ async function sendOTP(user){
 
     //demo test credentials from springedge
     var params = {
-        'apikey': '6mj40q3t7o89qz93cn0aytz8itxg6641', // API Key
+        'apikey': 'api_key', // API Key
         'sender': 'SEDEMO', // Sender Name
         'to': [
             user.mobile //Moblie Number
